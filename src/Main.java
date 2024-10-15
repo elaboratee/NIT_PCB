@@ -26,12 +26,12 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        prefilterImages();
+        preprocessImages();
         matchTemplate();
         createHists();
     }
 
-    private static void prefilterImages() {
+    private static void preprocessImages() {
         try {
             // Загрузка исходных изображений
             Mat targetSrc = Images.loadImage(PATH + "\\src\\target.jpg");
