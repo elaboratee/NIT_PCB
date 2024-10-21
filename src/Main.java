@@ -1,13 +1,14 @@
 import exception.HistCreationException;
 import exception.ImageReadException;
 import exception.ImageWriteException;
+import image.ImageIO;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
-import util.DatasetProcessing;
-import util.Hists;
-import util.Images;
+import dataset.DatasetProcessing;
+import image.Hists;
+import image.Images;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +19,7 @@ import java.util.stream.Stream;
 
 public class Main {
 
-    private static final String PATH = "img_test\\Spurious_copper";
+    private static final String PATH = "img_test\\Missing_hole";
     private static final String IMG_FORMAT = ".png";
 
     static {
@@ -34,8 +35,8 @@ public class Main {
     private static void preprocessImages() {
         try {
             // Загрузка исходных изображений
-            Mat targetSrc = Images.loadImage(PATH + "\\src\\target.jpg");
-            Mat templateSrc = Images.loadImage(PATH + "\\src\\template.jpg");
+            Mat targetSrc = ImageIO.loadImage(PATH + "\\src\\target.jpg");
+            Mat templateSrc = ImageIO.loadImage(PATH + "\\src\\template.jpg");
 
             // Преобразование к grayscale
             Mat targetGray = new Mat(targetSrc.rows(), targetSrc.cols(), CvType.CV_8UC1);
@@ -46,17 +47,17 @@ public class Main {
 
             // Применение Gaussian Blur
             Mat targetBlur = Images.applyGaussianBlur(targetGray);
-            Images.saveImage(PATH + "\\blur\\target_blur" + IMG_FORMAT, targetBlur);
+            ImageIO.saveImage(PATH + "\\blur\\target_blur" + IMG_FORMAT, targetBlur);
 
             Mat templateBlur = Images.applyGaussianBlur(templateGray);
-            Images.saveImage(PATH + "\\blur\\template_blur" + IMG_FORMAT, templateBlur);
+            ImageIO.saveImage(PATH + "\\blur\\template_blur" + IMG_FORMAT, templateBlur);
 
             // Выравнивание гистограммы
             Mat targetClahe = Images.applyCLAHE(targetBlur);
-            Images.saveImage(PATH + "\\clahe\\target_clahe" + IMG_FORMAT, targetClahe);
+            ImageIO.saveImage(PATH + "\\clahe\\target_clahe" + IMG_FORMAT, targetClahe);
 
             Mat templateClahe = Images.applyCLAHE(templateBlur);
-            Images.saveImage(PATH + "\\clahe\\template_clahe" + IMG_FORMAT, templateClahe);
+            ImageIO.saveImage(PATH + "\\clahe\\template_clahe" + IMG_FORMAT, templateClahe);
 
         } catch (ImageReadException | ImageWriteException e) {
             throw new RuntimeException(e);
@@ -66,16 +67,16 @@ public class Main {
     private static void matchTemplate() {
         try {
             // Загрузка предварительно обработанных изображений
-            Mat targetImage = Images.loadImage(
+            Mat targetImage = ImageIO.loadImage(
                     PATH + "\\clahe\\target_clahe" + IMG_FORMAT);
-            Mat templateImage = Images.loadImage(
+            Mat templateImage = ImageIO.loadImage(
                     PATH + "\\clahe\\template_clahe" + IMG_FORMAT);
 
             // Выполнение сравнения
             Mat result = Images.matchTemplate(targetImage, templateImage);
 
             // Сохранение результата сравнения
-            Images.saveImage(PATH + "\\match_result" + IMG_FORMAT, result);
+            ImageIO.saveImage(PATH + "\\match_result" + IMG_FORMAT, result);
 
         } catch (ImageReadException | ImageWriteException e) {
             throw new RuntimeException(e);
@@ -86,17 +87,17 @@ public class Main {
         try {
             // Создание гистограмм блюра
             Mat targetBlurHist = Hists.createHist(PATH + "\\blur\\target_blur" + IMG_FORMAT);
-            Images.saveImage(PATH + "\\hist\\target\\target_blur_hist" + IMG_FORMAT, targetBlurHist);
+            ImageIO.saveImage(PATH + "\\hist\\target\\target_blur_hist" + IMG_FORMAT, targetBlurHist);
 
             Mat templateBlurHist = Hists.createHist(PATH + "\\blur\\template_blur" + IMG_FORMAT);
-            Images.saveImage(PATH + "\\hist\\template\\template_blur_hist" + IMG_FORMAT, templateBlurHist);
+            ImageIO.saveImage(PATH + "\\hist\\template\\template_blur_hist" + IMG_FORMAT, templateBlurHist);
 
             // Создание выравненных гистограмм
             Mat targetClaheHist = Hists.createHist(PATH + "\\clahe\\target_clahe" + IMG_FORMAT);
-            Images.saveImage(PATH + "\\hist\\target\\target_clahe_hist" + IMG_FORMAT, targetClaheHist);
+            ImageIO.saveImage(PATH + "\\hist\\target\\target_clahe_hist" + IMG_FORMAT, targetClaheHist);
 
             Mat templateClaheHist = Hists.createHist(PATH + "\\clahe\\template_clahe" + IMG_FORMAT);
-            Images.saveImage(PATH + "\\hist\\template\\template_clahe_hist" + IMG_FORMAT, templateClaheHist);
+            ImageIO.saveImage(PATH + "\\hist\\template\\template_clahe_hist" + IMG_FORMAT, templateClaheHist);
 
         } catch (HistCreationException | ImageWriteException e) {
             throw new RuntimeException(e);
@@ -106,8 +107,8 @@ public class Main {
     private static void detectBoundaries() {
         try {
             // Загрузка исходных изображений
-            Mat targetSrc = Images.loadImage(PATH + "\\src\\target.jpg");
-            Mat templateSrc = Images.loadImage(PATH + "\\src\\template.jpg");
+            Mat targetSrc = ImageIO.loadImage(PATH + "\\src\\target.jpg");
+            Mat templateSrc = ImageIO.loadImage(PATH + "\\src\\template.jpg");
 
             // Преобразование к grayscale
             Mat targetGray = new Mat(targetSrc.rows(), targetSrc.cols(), CvType.CV_8UC1);
@@ -118,24 +119,24 @@ public class Main {
 
             // Применение Gaussian Blur
             Mat targetBlur = Images.applyGaussianBlur(targetGray);
-            Images.saveImage(PATH + "\\blur\\target_blur_test" + IMG_FORMAT, targetBlur);
+            ImageIO.saveImage(PATH + "\\blur\\target_blur_test" + IMG_FORMAT, targetBlur);
 
             Mat templateBlur = Images.applyGaussianBlur(templateGray);
-            Images.saveImage(PATH + "\\blur\\template_blur_test" + IMG_FORMAT, templateBlur);
+            ImageIO.saveImage(PATH + "\\blur\\template_blur_test" + IMG_FORMAT, templateBlur);
 
             // Выравнивание гистограммы
             Mat targetClahe = Images.applyCLAHE(targetBlur);
-            Images.saveImage(PATH + "\\clahe\\target_clahe_test" + IMG_FORMAT, targetClahe);
+            ImageIO.saveImage(PATH + "\\clahe\\target_clahe_test" + IMG_FORMAT, targetClahe);
 
             Mat templateClahe = Images.applyCLAHE(templateBlur);
-            Images.saveImage(PATH + "\\clahe\\template_clahe_test" + IMG_FORMAT, templateClahe);
+            ImageIO.saveImage(PATH + "\\clahe\\template_clahe_test" + IMG_FORMAT, templateClahe);
 
             // Выделение границ
             Mat targetBoundaries = Images.highlightBoundaries(targetClahe);
-            Images.saveImage(PATH + "\\boundaries\\target_boundaries_test" + IMG_FORMAT, targetBoundaries);
+            ImageIO.saveImage(PATH + "\\boundaries\\target_boundaries_test" + IMG_FORMAT, targetBoundaries);
 
             Mat templateBoundaries = Images.highlightBoundaries(templateClahe);
-            Images.saveImage(PATH + "\\boundaries\\template_boundaries_test" + IMG_FORMAT, templateBoundaries);
+            ImageIO.saveImage(PATH + "\\boundaries\\template_boundaries_test" + IMG_FORMAT, templateBoundaries);
 
         } catch (ImageReadException | ImageWriteException e) {
             throw new RuntimeException(e);
@@ -144,12 +145,12 @@ public class Main {
 
     private static void combineWithBoundaries() {
         try {
-            Mat targetImage = Images.loadImage(PATH + "\\src\\target.jpg");
-            Mat targetBoundaries = Images.loadImage(
+            Mat targetImage = ImageIO.loadImage(PATH + "\\src\\target.jpg");
+            Mat targetBoundaries = ImageIO.loadImage(
                     PATH + "\\boundaries\\target_boundaries_test" + IMG_FORMAT);
 
-            Mat templateImage = Images.loadImage(PATH + "\\src\\template.jpg");
-            Mat templateBoundaries = Images.loadImage(
+            Mat templateImage = ImageIO.loadImage(PATH + "\\src\\template.jpg");
+            Mat templateBoundaries = ImageIO.loadImage(
                     PATH + "\\boundaries\\template_boundaries_test" + IMG_FORMAT);
 
             Mat targetCombined = new Mat();
@@ -158,11 +159,11 @@ public class Main {
             Mat templateCombined = new Mat();
             Core.addWeighted(templateImage, 1, templateBoundaries, 0.75, 0, templateCombined);
 
-            Images.saveImage(
+            ImageIO.saveImage(
                     PATH + "\\combination\\target_combination_test" + IMG_FORMAT,
                     targetCombined
             );
-            Images.saveImage(
+            ImageIO.saveImage(
                     PATH + "\\combination\\template_combination_test" + IMG_FORMAT,
                     templateCombined
             );
@@ -186,7 +187,7 @@ public class Main {
                     String imageName = splittedPath[splittedPath.length - 1];
 
                     // Загружаем изображение
-                    Mat loadedImage = Images.loadImage(pathString);
+                    Mat loadedImage = ImageIO.loadImage(pathString);
 
                     // Визуализируем аннотации для изображения.
                     Mat visualisedAnnot = Images.visualizeAnnotations(
@@ -200,7 +201,7 @@ public class Main {
                             imageName.substring(0, imageName.length() - 4) + "_annotated.png";
 
                     // Сохраняем аннотированный файл
-                    Images.saveImage(pathToSave, visualisedAnnot);
+                    ImageIO.saveImage(pathToSave, visualisedAnnot);
                 }
             }
         } catch (Exception e) {

@@ -1,9 +1,7 @@
-package util;
+package image;
 
-import exception.ImageReadException;
-import exception.ImageWriteException;
+import dataset.DatasetProcessing;
 import org.opencv.core.*;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.CLAHE;
 import org.opencv.imgproc.Imgproc;
 
@@ -11,22 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 public class Images {
-
-    public static Mat loadImage(String path) throws ImageReadException {
-        Mat image = Imgcodecs.imread(path);
-        if (image.empty()) {
-            throw new ImageReadException("Загружено пустое изображение!");
-        }
-        Imgproc.cvtColor(image, image, Imgproc.COLOR_RGB2BGR);
-        return image;
-    }
-
-    public static void saveImage(String path, Mat img) throws ImageWriteException {
-        boolean saved = Imgcodecs.imwrite(path, img);
-        if (!saved) {
-            throw new ImageWriteException("Не удалось сохранить изображение!");
-        }
-    }
 
     public static Mat visualizeAnnotations(Mat img,
                                            List<List<Map<String, String>>> allAnnotations,
@@ -136,6 +118,12 @@ public class Images {
         return result;
     }
 
+    public static Mat applyGaussianBlur(Mat src) {
+        Mat result = new Mat();
+        Imgproc.GaussianBlur(src, result, new Size(3, 3), 12);
+        return result;
+    }
+
     public static Mat applyCLAHE(Mat src) {
         Mat result = new Mat();
         CLAHE clahe = Imgproc.createCLAHE(6, new Size(2, 2));
@@ -153,12 +141,6 @@ public class Images {
                 3,
                 true
         );
-        return result;
-    }
-
-    public static Mat applyGaussianBlur(Mat src) {
-        Mat result = new Mat();
-        Imgproc.GaussianBlur(src, result, new Size(3, 3), 12);
         return result;
     }
 }

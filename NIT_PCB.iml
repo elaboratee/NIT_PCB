@@ -10,17 +10,15 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://C:/opencv_4_9/build/java/opencv-490.jar!/" />
+          <root url="jar://C:/OpenCV/opencv_4_9/build/java/opencv-490.jar!/" />
         </CLASSES>
-        <JAVADOC>
-          <root url="https://docs.opencv.org/4.9.0/javadoc/index.html" />
-        </JAVADOC>
+        <JAVADOC />
         <NATIVE>
-          <root url="file://C:/opencv_4_9/build/java/x64" />
+          <root url="file://C:/OpenCV/opencv_4_9/build/java/x64" />
         </NATIVE>
         <SOURCES>
-          <root url="jar://C:/opencv_4_9/build/java/opencv-490.jar!/" />
-          <root url="jar://C:/opencv_4_9/build/java/opencv-490.jar!/" />
+          <root url="jar://C:/OpenCV/opencv_4_9/build/java/opencv-490.jar!/" />
+          <root url="jar://C:/OpenCV/opencv_4_9/build/java/opencv-490.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

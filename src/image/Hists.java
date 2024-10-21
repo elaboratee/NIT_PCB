@@ -1,4 +1,4 @@
-package util;
+package image;
 
 import exception.HistCreationException;
 import exception.ImageReadException;
@@ -10,8 +10,8 @@ import java.util.List;
 
 public class Hists {
 
-    private static final Scalar COLOR_WHITE = new Scalar(255, 255, 255);
     private static final Scalar COLOR_BLACK = new Scalar(0, 0, 0);
+    private static final Scalar COLOR_WHITE = new Scalar(255, 255, 255);
 
     public static Mat createHist(Mat src) {
         List<Mat> images = new ArrayList<>();
@@ -50,7 +50,7 @@ public class Hists {
     public static Mat createHist(String path) throws HistCreationException {
         Mat img;
         try {
-            img = Images.loadImage(path);
+            img = ImageIO.loadImage(path);
         } catch (ImageReadException e) {
             throw new HistCreationException(e);
         }
