@@ -2,13 +2,13 @@ package image;
 
 import dataset.DatasetProcessing;
 import org.opencv.core.*;
-import org.opencv.imgproc.CLAHE;
 import org.opencv.imgproc.Imgproc;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Images {
+public class Processing {
 
     public static Mat visualizeAnnotations(Mat img,
                                            List<List<Map<String, String>>> allAnnotations,
@@ -118,17 +118,33 @@ public class Images {
         return result;
     }
 
-    public static Mat applyGaussianBlur(Mat src) {
-        Mat result = new Mat();
-        Imgproc.GaussianBlur(src, result, new Size(3, 3), 12);
-        return result;
+    public static List<MatOfPoint> findContours(Mat img) {
+        Mat imgClone = img.clone();
+        Imgproc.cvtColor(imgClone, imgClone, Imgproc.COLOR_BGR2GRAY);
+
+        Mat thresholdImg = new Mat();
+        Imgproc.threshold(imgClone, thresholdImg, 127, 1, Imgproc.THRESH_BINARY);
+
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        Imgproc.findContours(
+                thresholdImg,
+                contours,
+                hierarchy,
+                Imgproc.RETR_EXTERNAL,
+                Imgproc.CHAIN_APPROX_SIMPLE
+        );
+
+        return contours;
     }
 
-    public static Mat applyCLAHE(Mat src) {
-        Mat result = new Mat();
-        CLAHE clahe = Imgproc.createCLAHE(6, new Size(2, 2));
-        clahe.apply(src, result);
-        return result;
+    public static List<Rect> boundingRects(List<MatOfPoint> contours) {
+        List<Rect> rects = new ArrayList<>();
+        for (MatOfPoint contour : contours) {
+            Rect rect = Imgproc.boundingRect(contour);
+            rects.add(rect);
+        }
+        return rects;
     }
 
     public static Mat highlightBoundaries(Mat img) {
