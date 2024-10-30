@@ -32,3 +32,6 @@ bin/
 *.jpg
 *.jpeg
 *.png
+
+### Logs ###
+*.log
