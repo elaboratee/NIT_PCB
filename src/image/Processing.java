@@ -1,6 +1,8 @@
 package image;
 
 import dataset.DatasetProcessing;
+import exception.ImageReadException;
+import exception.ImageWriteException;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
@@ -121,7 +123,6 @@ public class Processing {
 
     public static List<MatOfPoint> findContours(Mat img) {
         Mat imgClone = img.clone();
-//        Imgproc.cvtColor(imgClone, imgClone, Imgproc.COLOR_BGR2GRAY);
 
         Mat thresholdImg = new Mat();
         Imgproc.threshold(imgClone, thresholdImg, 127, 1, Imgproc.THRESH_BINARY);

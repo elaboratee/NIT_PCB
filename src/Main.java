@@ -40,32 +40,48 @@ public class Main {
             for (Path path : pathList) {
                 String pathString = path.toString();
                 if (pathString.endsWith(".jpg")) {
-                    // Получаем имя изображения
+                    // Получение имени изображения с дефектом
                     String[] splittedPath = pathString.split("\\\\");
                     String imageName = splittedPath[splittedPath.length - 1];
 
-                    // Загружаем изображения
+                    // Загрузка изображений
                     Mat targetSrc = ImageIO.loadImage(DatasetProcessing.PCB_USED_DIR + "\\" +
                             imageName.substring(0, 2) + IMG_LOAD_FORMAT);
                     Mat templateSrc = ImageIO.loadImage(pathString);
 
-                    // Обработка изображений
-                    Mat[] processedImages = preprocessImages(targetSrc, templateSrc);
+                    // Предварительная обработка изображений
+                    Mat preprocessedTarget = preprocessImage(targetSrc);
+                    Mat preprocessedTemplate = preprocessImage(templateSrc);
 
-                    Mat preprocessedTarget = processedImages[0];
-                    Mat preprocessedTemplate = processedImages[1];
-
+                    // Поиск дефектов методом сравнения с шаблоном
                     Mat matchedImg = matchTemplate(preprocessedTarget, preprocessedTemplate);
 
+                    // Выделение дефектов рамками
                     Mat boundedImg = boundDefects(matchedImg);
 
-                    ImageIO.saveImage("img\\processed\\" + DEFECT_TYPE + "\\" + imageName, boundedImg);
+                    // Сохранение полученного изображения
+                    ImageIO.saveImage(
+                            "img\\processed\\" + DEFECT_TYPE + "\\" +
+                                    imageName.substring(0, imageName.length() - 4) + IMG_SAVE_FORMAT,
+                            boundedImg);
                 }
             }
 
         } catch (IOException | ImageReadException | ImageWriteException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static Mat preprocessImage(Mat sourceImg) {
+        // Преобразование к grayscale
+        Mat sourceGray = new Mat(sourceImg.rows(), sourceImg.cols(), CvType.CV_8UC1);
+        Imgproc.cvtColor(sourceImg, sourceGray, Imgproc.COLOR_BGR2GRAY);
+
+        // Применение Gaussian Blur
+        Mat sourceBlur = Filters.applyGaussianBlur(sourceGray);
+
+        // Выравнивание гистограммы
+        return Filters.applyCLAHE(sourceBlur);
     }
 
     private static Mat[] preprocessImages(Mat targetImg,
