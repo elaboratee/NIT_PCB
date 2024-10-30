@@ -71,20 +71,20 @@ public class Processing {
     public static Mat matchTemplate(Mat target,
                                     Mat template) {
         // Преобразуем исходные изображения в grayscale
-        Mat targetGray = new Mat(target.rows(), target.cols(), CvType.CV_8UC1);
-        Mat templateGray = new Mat(template.rows(), template.cols(), CvType.CV_8UC1);
-        Imgproc.cvtColor(target, targetGray, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.cvtColor(template, templateGray, Imgproc.COLOR_BGR2GRAY);
+//        Mat targetGray = new Mat(target.rows(), target.cols(), CvType.CV_8UC1);
+//        Mat templateGray = new Mat(template.rows(), template.cols(), CvType.CV_8UC1);
+//        Imgproc.cvtColor(target, targetGray, Imgproc.COLOR_BGR2GRAY);
+//        Imgproc.cvtColor(template, templateGray, Imgproc.COLOR_BGR2GRAY);
 
         // Изменение размеров изображений (до 25%)
-        Imgproc.resize(targetGray, targetGray,
-                new Size(targetGray.cols() / 2.0, targetGray.rows() / 2.0));
-        Imgproc.resize(templateGray, templateGray,
-                new Size(templateGray.cols() / 2.0, templateGray.rows() / 2.0));
+        Imgproc.resize(target, target,
+                new Size(target.cols() / 2.0, target.rows() / 2.0));
+        Imgproc.resize(template, template,
+                new Size(template.cols() / 2.0, template.rows() / 2.0));
 
         // Размер ядра и результирующая матрица
         int kernelSize = 5;
-        Mat result = new Mat(targetGray.size(), CvType.CV_32F);
+        Mat result = new Mat(target.size(), CvType.CV_32F);
 
         // Структуры для хранения шаблонов и промежуточных результатов
         Rect roi = new Rect(0, 0, kernelSize, kernelSize);
@@ -93,15 +93,15 @@ public class Processing {
         double[] matchValue;
 
         // Сравнение по всем пикселям
-        for (int y = 0; y <= targetGray.rows() - kernelSize; y++) {
-            for (int x = 0; x <= targetGray.cols() - kernelSize; x++) {
+        for (int y = 0; y <= target.rows() - kernelSize; y++) {
+            for (int x = 0; x <= target.cols() - kernelSize; x++) {
                 // Изменяем координаты ROI
                 roi.x = x;
                 roi.y = y;
 
                 // Определяем области шаблонов
-                targetRegion = targetGray.submat(roi);
-                templateRegion = templateGray.submat(roi);
+                targetRegion = target.submat(roi);
+                templateRegion = template.submat(roi);
 
                 // Сравниваем шаблоны
                 Imgproc.matchTemplate(targetRegion, templateRegion, matchResult, Imgproc.TM_SQDIFF_NORMED);
@@ -114,13 +114,14 @@ public class Processing {
 
         // Нормализуем полученную матрицу для визуализации изображения
         Core.normalize(result, result, 0, 255, Core.NORM_MINMAX, -1);
+        result.convertTo(result, CvType.CV_8UC1);
 
         return result;
     }
 
     public static List<MatOfPoint> findContours(Mat img) {
         Mat imgClone = img.clone();
-        Imgproc.cvtColor(imgClone, imgClone, Imgproc.COLOR_BGR2GRAY);
+//        Imgproc.cvtColor(imgClone, imgClone, Imgproc.COLOR_BGR2GRAY);
 
         Mat thresholdImg = new Mat();
         Imgproc.threshold(imgClone, thresholdImg, 127, 1, Imgproc.THRESH_BINARY);
@@ -138,7 +139,7 @@ public class Processing {
         return contours;
     }
 
-    public static List<Rect> boundingRects(List<MatOfPoint> contours) {
+    public static List<Rect> getBoundingRects(List<MatOfPoint> contours) {
         List<Rect> rects = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             Rect rect = Imgproc.boundingRect(contour);
