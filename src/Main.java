@@ -84,26 +84,6 @@ public class Main {
         return Filters.applyCLAHE(sourceBlur);
     }
 
-    private static Mat[] preprocessImages(Mat targetImg,
-                                          Mat templateImg) {
-        // Преобразование к grayscale
-        Mat targetGray = new Mat(targetImg.rows(), targetImg.cols(), CvType.CV_8UC1);
-        Imgproc.cvtColor(targetImg, targetGray, Imgproc.COLOR_BGR2GRAY);
-
-        Mat templateGray = new Mat(templateImg.rows(), templateImg.cols(), CvType.CV_8UC1);
-        Imgproc.cvtColor(templateImg, templateGray, Imgproc.COLOR_BGR2GRAY);
-
-        // Применение Gaussian Blur
-        Mat targetBlur = Filters.applyGaussianBlur(targetGray);
-        Mat templateBlur = Filters.applyGaussianBlur(templateGray);
-
-        // Выравнивание гистограммы
-        Mat targetClahe = Filters.applyCLAHE(targetBlur);
-        Mat templateClahe = Filters.applyCLAHE(templateBlur);
-
-        return new Mat[]{targetClahe, templateClahe};
-    }
-
     private static Mat matchTemplate(Mat targetImg,
                                      Mat templateImg) {
         return Processing.matchTemplate(targetImg, templateImg);
