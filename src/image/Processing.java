@@ -1,8 +1,6 @@
 package image;
 
 import dataset.DatasetProcessing;
-import exception.ImageReadException;
-import exception.ImageWriteException;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
@@ -72,18 +70,6 @@ public class Processing {
 
     public static Mat matchTemplate(Mat target,
                                     Mat template) {
-        // Преобразуем исходные изображения в grayscale
-//        Mat targetGray = new Mat(target.rows(), target.cols(), CvType.CV_8UC1);
-//        Mat templateGray = new Mat(template.rows(), template.cols(), CvType.CV_8UC1);
-//        Imgproc.cvtColor(target, targetGray, Imgproc.COLOR_BGR2GRAY);
-//        Imgproc.cvtColor(template, templateGray, Imgproc.COLOR_BGR2GRAY);
-
-        // Изменение размеров изображений (до 25%)
-        Imgproc.resize(target, target,
-                new Size(target.cols() / 2.0, target.rows() / 2.0));
-        Imgproc.resize(template, template,
-                new Size(template.cols() / 2.0, template.rows() / 2.0));
-
         // Размер ядра и результирующая матрица
         int kernelSize = 5;
         Mat result = new Mat(target.size(), CvType.CV_32F);
