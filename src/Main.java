@@ -37,7 +37,7 @@ public class Main {
         // Настройка логгера
         LOGGER.setLevel(Level.INFO);
         try {
-            FileHandler fileHandler = new FileHandler("logs\\logs.log");
+            FileHandler fileHandler = new FileHandler("info\\logs.log");
             LOGGER.addHandler(fileHandler);
         } catch (IOException | SecurityException e) {
             throw new RuntimeException(e);
@@ -74,21 +74,24 @@ public class Main {
                     long startTime = System.currentTimeMillis();
 
                     // Предварительная обработка изображений
-                    Mat preprocessedTarget = preprocessImage(targetSrc);
-                    Mat preprocessedTemplate = preprocessImage(templateSrc);
+                    Mat preprocessedTarget = preProcessImage(targetSrc);
+                    Mat preprocessedTemplate = preProcessImage(templateSrc);
 
                     // Поиск дефектов методом сравнения с шаблоном
                     Mat matchedImg = matchTemplate(preprocessedTarget, preprocessedTemplate);
 
+                    // Постобработка изображения
+                    Mat dilatedImg = postProcessImage(matchedImg);
+
                     // Выделение дефектов рамками
-                    Mat boundedImg = boundDefects(matchedImg, imageName);
+                    Mat boundedImg = boundDefects(dilatedImg, imageName);
 
                     // Окончание замера времени работы
                     long endTime = System.currentTimeMillis();
                     System.out.println("Время обработки изображения " + imageName + " = " +
                             (endTime - startTime) / 1000.0 + " sec\n");
 
-                    // Вывод изображения на экран
+                    // Вывод обработанного изображения на экран
                     showImage(boundedImg);
 
                     // Сохранение полученного изображения
@@ -105,7 +108,7 @@ public class Main {
         }
     }
 
-    private static Mat preprocessImage(Mat sourceImg) {
+    private static Mat preProcessImage(Mat sourceImg) {
         // Преобразование к grayscale
         Mat sourceGray = new Mat(sourceImg.rows(), sourceImg.cols(), CvType.CV_8UC1);
         Imgproc.cvtColor(sourceImg, sourceGray, Imgproc.COLOR_BGR2GRAY);
@@ -119,7 +122,11 @@ public class Main {
 
     private static Mat matchTemplate(Mat targetImg,
                                      Mat templateImg) {
-        return Processing.matchTemplate(targetImg, templateImg);
+        return Processing.matchTemplateOptimized(targetImg, templateImg);
+    }
+
+    private static Mat postProcessImage(Mat sourceImg) {
+        return Processing.dilateImage(sourceImg);
     }
 
     private static Mat boundDefects(Mat sourceImg,
@@ -152,7 +159,7 @@ public class Main {
 
     private static void showImage(Mat src) {
         HighGui.imshow("Processed Image", src);
-        int keyboard = HighGui.waitKey(1);
+        HighGui.waitKey(1);
     }
 
     private static void annotateImages() {

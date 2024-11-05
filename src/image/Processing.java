@@ -68,8 +68,8 @@ public class Processing {
         return img;
     }
 
-    public static Mat matchTemplate(Mat target,
-                                    Mat template) {
+    public static Mat matchTemplateOptimized(Mat target,
+                                             Mat template) {
         // Размер ядра и результирующая матрица
         int kernelSize = 5;
         Mat result = new Mat(target.size(), CvType.CV_32F);
@@ -81,8 +81,8 @@ public class Processing {
         double[] matchValue;
 
         // Сравнение по всем пикселям
-        for (int y = 0; y <= target.rows() - kernelSize; y++) {
-            for (int x = 0; x <= target.cols() - kernelSize; x++) {
+        for (int y = 0; y <= target.rows() - kernelSize; y += kernelSize / 2) {
+            for (int x = 0; x <= target.cols() - kernelSize; x += kernelSize / 2) {
                 // Изменяем координаты ROI
                 roi.x = x;
                 roi.y = y;
@@ -133,6 +133,17 @@ public class Processing {
             rects.add(rect);
         }
         return rects;
+    }
+
+    public static Mat dilateImage(Mat src) {
+        // Создание примитива
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
+
+        // Дилатацию изображения
+        Mat result = new Mat();
+        Imgproc.dilate(src, result, kernel);
+
+        return result;
     }
 
     public static Mat highlightBoundaries(Mat img) {
