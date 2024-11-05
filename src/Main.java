@@ -10,7 +10,10 @@ import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,6 +30,7 @@ public class Main {
     private static final String PATH = DatasetProcessing.IMG_DIR + "\\" + DEFECT_TYPE;
     private static final String IMG_LOAD_FORMAT = ".jpg";
     private static final String IMG_SAVE_FORMAT = ".png";
+    private static final String OPTIMIZATION_TYPE = "OPTIMIZED";
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
 
     static {
@@ -48,10 +52,16 @@ public class Main {
     }
 
     private static void findDefects() {
-        try (Stream<Path> pathStream = Files.walk(Paths.get(PATH))) {
+        // Путь к CSV-файлу
+        String csvFile = "info\\" + DEFECT_TYPE + "_" + OPTIMIZATION_TYPE + ".csv";
+
+        try (Stream<Path> pathStream = Files.walk(Paths.get(PATH));
+             PrintWriter writer = new PrintWriter(new FileWriter(csvFile))) {
+
+            // Поток путей к файлам из директории
             List<Path> pathList = pathStream.toList();
 
-            // Получаем пути ко всем файлам и директориям
+            // Обработка файлов из директории
             for (Path path : pathList) {
                 String pathString = path.toString();
                 if (pathString.endsWith(".jpg")) {
@@ -87,12 +97,10 @@ public class Main {
                     Mat boundedImg = boundDefects(dilatedImg, imageName);
 
                     // Окончание замера времени работы
-                    long endTime = System.currentTimeMillis();
+                    long processingTime = System.currentTimeMillis() - startTime;
                     System.out.println("Время обработки изображения " + imageName + " = " +
-                            (endTime - startTime) / 1000.0 + " sec\n");
+                            (processingTime / 1000.0) + " sec\n");
 
-                    // Вывод обработанного изображения на экран
-                    showImage(boundedImg);
 
                     // Сохранение полученного изображения
                     ImageIO.saveImage(
@@ -100,6 +108,13 @@ public class Main {
                                     imageName.substring(0, imageName.length() - 4) + IMG_SAVE_FORMAT,
                             boundedImg
                     );
+
+                    // Вывод обработанного изображения на экран
+                    showImage(boundedImg);
+
+                    // Запись данных в CSV
+                    writer.println(imageName + "," + processingTime);
+                    writer.flush();
                 }
             }
 
