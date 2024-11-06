@@ -13,7 +13,6 @@ import org.opencv.imgproc.Imgproc;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,7 +25,7 @@ import java.util.stream.Stream;
 
 public class Main {
 
-    private static final String DEFECT_TYPE = "Open_circuit";
+    private static final String DEFECT_TYPE = "Mouse_bite";
     private static final String PATH = DatasetProcessing.IMG_DIR + "\\" + DEFECT_TYPE;
     private static final String IMG_LOAD_FORMAT = ".jpg";
     private static final String IMG_SAVE_FORMAT = ".png";
@@ -101,7 +100,6 @@ public class Main {
                     System.out.println("Время обработки изображения " + imageName + " = " +
                             (processingTime / 1000.0) + " sec\n");
 
-
                     // Сохранение полученного изображения
                     ImageIO.saveImage(
                             "img\\processed\\" + DEFECT_TYPE + "\\" +
@@ -109,15 +107,11 @@ public class Main {
                             boundedImg
                     );
 
-                    // Вывод обработанного изображения на экран
-                    showImage(boundedImg);
-
                     // Запись данных в CSV
                     writer.println(imageName + "," + processingTime);
                     writer.flush();
                 }
             }
-
         } catch (IOException | ImageReadException | ImageWriteException e) {
             throw new RuntimeException(e);
         }
