@@ -81,8 +81,8 @@ public class Processing {
         double[] matchValue;
 
         // Сравнение по всем пикселям
-        for (int y = 0; y <= target.rows() - kernelSize; y += kernelSize) {
-            for (int x = 0; x <= target.cols() - kernelSize; x += kernelSize) {
+        for (int y = 0; y <= target.rows() - kernelSize; y += kernelSize / 2) {
+            for (int x = 0; x <= target.cols() - kernelSize; x += kernelSize / 2) {
                 // Изменяем координаты ROI
                 roi.x = x;
                 roi.y = y;
