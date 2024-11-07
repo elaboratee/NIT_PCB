@@ -176,14 +176,9 @@ public class Main {
         // Поиск контуров
         List<MatOfPoint> contours = Processing.findContours(sourceImg);
 
-        // Создание изображения контуров
-        Mat contoursImg = new Mat();
-        targetImg.copyTo(contoursImg);
-        Imgproc.drawContours(contoursImg, contours, -1, new Scalar(255, 0, 0), 1);
-
         // Создание изображения с выделенными дефектами
         Mat boundedImg = new Mat();
-        contoursImg.copyTo(boundedImg);
+        targetImg.copyTo(boundedImg);
 
         // Отрисовка выделений дефектов
         List<Rect> boundingRects = Processing.getBoundingRects(contours);
