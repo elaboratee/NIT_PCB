@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 
 public class Main {
 
-    private static final String DEFECT_TYPE = "Mouse_bite";
+    private static final String DEFECT_TYPE = "Open_circuit";
     private static final String PATH = DatasetProcessing.IMG_DIR + "\\" + DEFECT_TYPE;
     private static final String IMG_LOAD_FORMAT = ".jpg";
     private static final String IMG_SAVE_FORMAT = ".png";
@@ -93,7 +93,7 @@ public class Main {
                     Mat dilatedImg = postProcessImage(matchedImg);
 
                     // Выделение дефектов рамками
-                    Mat boundedImg = boundDefects(dilatedImg, imageName);
+                    Mat boundedImg = boundDefectsTarget(dilatedImg, templateSrc, imageName);
 
                     // Окончание замера времени работы
                     long processingTime = System.currentTimeMillis() - startTime;
@@ -108,7 +108,7 @@ public class Main {
                     );
 
                     // Запись данных в CSV
-                    writer.println(imageName + "," + processingTime);
+                    writer.println(imageName + "," + processingTime + "," + templateSrc.size());
                     writer.flush();
                 }
             }
@@ -140,16 +140,52 @@ public class Main {
 
     private static Mat boundDefects(Mat sourceImg,
                                     String imgName) {
+        // Поиск контуров
         List<MatOfPoint> contours = Processing.findContours(sourceImg);
 
+        // Создание изображения контуров
         Mat contoursImg = new Mat();
         sourceImg.copyTo(contoursImg);
         Imgproc.cvtColor(contoursImg, contoursImg, Imgproc.COLOR_GRAY2BGR);
         Imgproc.drawContours(contoursImg, contours, -1, new Scalar(255, 0, 0), 1);
 
+        // Создание изображения с выделенными дефектами
         Mat boundedImg = new Mat();
         contoursImg.copyTo(boundedImg);
 
+        // Отрисовка выделений дефектов
+        List<Rect> boundingRects = Processing.getBoundingRects(contours);
+        for (Rect rect : boundingRects) {
+            Imgproc.rectangle(boundedImg, rect, new Scalar(0, 0, 255), 1);
+
+            if (rect.size().width >= 2 || rect.size().height >= 2) {
+                String logMsg = String.format("На плате %s обнаружен дефект. Координаты дефекта: (%d, %d; %d, %d)",
+                        imgName.substring(0, imgName.length() - 4),
+                        rect.x, rect.y,
+                        rect.x + rect.height, rect.y + rect.width);
+                LOGGER.log(Level.WARNING, logMsg);
+            }
+        }
+
+        return boundedImg;
+    }
+
+    private static Mat boundDefectsTarget(Mat sourceImg,
+                                          Mat targetImg,
+                                          String imgName) {
+        // Поиск контуров
+        List<MatOfPoint> contours = Processing.findContours(sourceImg);
+
+        // Создание изображения контуров
+        Mat contoursImg = new Mat();
+        targetImg.copyTo(contoursImg);
+        Imgproc.drawContours(contoursImg, contours, -1, new Scalar(255, 0, 0), 1);
+
+        // Создание изображения с выделенными дефектами
+        Mat boundedImg = new Mat();
+        contoursImg.copyTo(boundedImg);
+
+        // Отрисовка выделений дефектов
         List<Rect> boundingRects = Processing.getBoundingRects(contours);
         for (Rect rect : boundingRects) {
             Imgproc.rectangle(boundedImg, rect, new Scalar(0, 0, 255), 1);
