@@ -10,6 +10,8 @@ import java.util.Map;
 
 public class Processing {
 
+    private static final int KERNEL_SIZE = 5;
+
     public static Mat visualizeAnnotations(Mat img,
                                            List<List<Map<String, String>>> allAnnotations,
                                            String imageName) {
@@ -70,19 +72,19 @@ public class Processing {
 
     public static Mat matchTemplateOptimized(Mat target,
                                              Mat template) {
-        // Размер ядра и результирующая матрица
-        int kernelSize = 5;
+        // Результирующая матрица
         Mat result = new Mat(target.size(), CvType.CV_32F);
 
         // Структуры для хранения шаблонов и промежуточных результатов
-        Rect roi = new Rect(0, 0, kernelSize, kernelSize);
+        Rect roi = new Rect(0, 0, KERNEL_SIZE, KERNEL_SIZE);
         Mat targetRegion, templateRegion;
         Mat matchResult = new Mat(1, 1, CvType.CV_32F);
         double[] matchValue;
 
-        // Сравнение по всем пикселям
-        for (int y = 0; y <= target.rows() - kernelSize; y += kernelSize / 2) {
-            for (int x = 0; x <= target.cols() - kernelSize; x += kernelSize / 2) {
+        // Сравнение по парам ROI
+        int step = KERNEL_SIZE / 2;
+        for (int y = 0; y <= target.rows() - KERNEL_SIZE; y += step) {
+            for (int x = 0; x <= target.cols() - KERNEL_SIZE; x += step) {
                 // Изменяем координаты ROI
                 roi.x = x;
                 roi.y = y;
@@ -130,6 +132,11 @@ public class Processing {
         List<Rect> rects = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             Rect rect = Imgproc.boundingRect(contour);
+
+            // Корректировка координат
+            rect.width += KERNEL_SIZE;
+            rect.height += KERNEL_SIZE;
+
             rects.add(rect);
         }
         return rects;
@@ -137,7 +144,7 @@ public class Processing {
 
     public static Mat dilateImage(Mat src) {
         // Создание примитива
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(KERNEL_SIZE, KERNEL_SIZE));
 
         // Дилатацию изображения
         Mat result = new Mat();
