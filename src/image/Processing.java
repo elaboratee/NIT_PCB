@@ -83,8 +83,8 @@ public class Processing {
 
         // Сравнение по парам ROI
         int step = KERNEL_SIZE / 2;
-        for (int y = 0; y <= target.rows() - KERNEL_SIZE; y += step) {
-            for (int x = 0; x <= target.cols() - KERNEL_SIZE; x += step) {
+        for (int y = 0; y < target.rows() - KERNEL_SIZE + 1; y += step) {
+            for (int x = 0; x < target.cols() - KERNEL_SIZE + 1; x += step) {
                 // Изменяем координаты ROI
                 roi.x = x;
                 roi.y = y;
@@ -96,9 +96,10 @@ public class Processing {
                 // Сравниваем шаблоны
                 Imgproc.matchTemplate(targetRegion, templateRegion, matchResult, Imgproc.TM_SQDIFF_NORMED);
 
-                // Получаем значения сравнения и записываем результат
+                // Получаем значения сравнения и записываем результат,
+                // корректируем координаты результата для соответствия центру ядра
                 matchValue = matchResult.get(0, 0);
-                result.put(y, x, matchValue[0]);
+                result.put(y + step, x + step, matchValue[0]);
             }
         }
 
@@ -132,10 +133,6 @@ public class Processing {
         List<Rect> rects = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             Rect rect = Imgproc.boundingRect(contour);
-
-            // Корректировка координат
-            rect.width += KERNEL_SIZE;
-            rect.height += KERNEL_SIZE;
 
             rects.add(rect);
         }
