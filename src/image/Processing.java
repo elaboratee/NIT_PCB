@@ -111,11 +111,11 @@ public class Processing {
     }
 
     public static List<MatOfPoint> findContours(Mat img) {
-        Mat imgClone = img.clone();
-
+        // Пороговая обработка для получения бинарного изображения
         Mat thresholdImg = new Mat();
-        Imgproc.threshold(imgClone, thresholdImg, 127, 1, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(img, thresholdImg, 127, 1, Imgproc.THRESH_BINARY);
 
+        // Поиск контуров
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(
@@ -132,9 +132,7 @@ public class Processing {
     public static List<Rect> getBoundingRects(List<MatOfPoint> contours) {
         List<Rect> rects = new ArrayList<>();
         for (MatOfPoint contour : contours) {
-            Rect rect = Imgproc.boundingRect(contour);
-
-            rects.add(rect);
+            rects.add(Imgproc.boundingRect(contour));
         }
         return rects;
     }

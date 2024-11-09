@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 
 public class Main {
 
-    private static final String DEFECT_TYPE = "Open_circuit";
+    private static final String DEFECT_TYPE = "Spurious_copper";
     private static final String PATH = DatasetProcessing.IMG_DIR + "\\" + DEFECT_TYPE;
     private static final String IMG_LOAD_FORMAT = ".jpg";
     private static final String IMG_SAVE_FORMAT = ".png";
@@ -46,7 +46,7 @@ public class Main {
             throw new RuntimeException(e);
         }
 
-        // Обработка изображений
+        // Поиск дефектов на изображениях
         findDefects();
     }
 
