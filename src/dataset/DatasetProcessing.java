@@ -21,18 +21,18 @@ public class DatasetProcessing {
     public static final String PCB_USED_DIR = DATASET_DIR + "\\PCB_USED";
 
     public static List<List<Map<String, String>>> parseAllAnnotations() throws IOException {
-        List<List<Map<String, String>>> allParsedData = new ArrayList<>();
+        List<List<Map<String, String>>> parsedData = new ArrayList<>();
         try (Stream<Path> pathStream = Files.walk(Paths.get(ANNOT_DIR))) {
             List<Path> paths = pathStream.toList();
             for (Path path : paths) {
                 if (path.toString().toLowerCase().endsWith(".xml")) {
-                    allParsedData.add(XMLParsing.parseXML(path.toString()));
+                    parsedData.add(XMLParsing.parseXML(path.toString()));
                 }
             }
         } catch (XMLParseException e) {
             return new ArrayList<>();
         }
-        return allParsedData;
+        return parsedData;
     }
 
     public static String getSubfolder(String imageName) {

@@ -31,7 +31,6 @@ public class XMLParsing {
      * @throws XMLParseException if a DocumentBuilder cannot be created or XML parsing error occurs
      */
     public static List<Map<String, String>> parseXML(String path) throws XMLParseException {
-
         List<Map<String, String>> data = new ArrayList<>();
         try {
             DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
