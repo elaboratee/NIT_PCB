@@ -9,7 +9,7 @@ public class Filters {
 
     public static Mat applyGaussianBlur(Mat src) {
         Mat result = new Mat();
-        Imgproc.GaussianBlur(src, result, new Size(3, 3), 12);
+        Imgproc.GaussianBlur(src, result, new Size(3, 3), 1.5);
         return result;
     }
 

@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 
 public class Main {
 
-    private static final String DEFECT_TYPE = "Spurious_copper";
+    private static final String DEFECT_TYPE = "Missing_hole";
     private static final String PATH = DatasetProcessing.IMG_DIR + "\\" + DEFECT_TYPE;
     private static final String IMG_LOAD_FORMAT = ".jpg";
     private static final String IMG_SAVE_FORMAT = ".png";
@@ -50,6 +50,38 @@ public class Main {
         findDefects();
     }
 
+    private static void preProcessTemplates() {
+        try (Stream<Path> pathStream = Files.walk(Paths.get(DatasetProcessing.PCB_USED_DIR))) {
+            // Поток путей к шаблонам
+            List<Path> pathList = pathStream.toList();
+
+            // Обработка шаблонов
+            for (Path path : pathList) {
+                String pathString = path.toString().toLowerCase();
+                if (pathString.endsWith(".jpg")) {
+                    // Получение имени шаблона
+                    String[] splittedPath = pathString.split("\\\\");
+                    String imageName = splittedPath[splittedPath.length - 1];
+
+                    // Загрузка изображения
+                    Mat src = ImageIO.loadImage(pathString);
+
+                    // Изменение размеров шаблона (до 25%)
+                    Imgproc.resize(src, src,
+                            new Size(src.cols() / 2.0, src.rows() / 2.0));
+
+                    // Предварительная обработка шаблона
+                    Mat preprocessed = preProcessImage(src);
+
+                    // Сохранение шаблона
+                    ImageIO.saveImage("img\\templates\\" + imageName, preprocessed);
+                }
+            }
+        } catch (IOException | ImageReadException | ImageWriteException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static void findDefects() {
         // Путь к CSV-файлу
         String csvFile = "info\\" + DEFECT_TYPE + "_" + OPTIMIZATION_TYPE + ".csv";
@@ -61,6 +93,8 @@ public class Main {
             List<Path> pathList = pathStream.toList();
 
             // Обработка файлов из директории
+            Mat targetSrc = null;
+            String lastLoadedTemplate = "";
             for (Path path : pathList) {
                 String pathString = path.toString();
                 if (pathString.endsWith(".jpg")) {
@@ -69,25 +103,66 @@ public class Main {
                     String imageName = splittedPath[splittedPath.length - 1];
 
                     // Загрузка изображений
-                    Mat targetSrc = ImageIO.loadImage(DatasetProcessing.PCB_USED_DIR + "\\" +
-                            imageName.substring(0, 2) + IMG_LOAD_FORMAT);
+                    String templateCode = imageName.substring(0, 2);
+                    if (!lastLoadedTemplate.equals(templateCode)) {
+                        targetSrc = ImageIO.loadImage("img\\templates\\" + templateCode + IMG_LOAD_FORMAT);
+                        lastLoadedTemplate = templateCode;
+                    }
                     Mat templateSrc = ImageIO.loadImage(pathString);
 
-                    // Изменение размеров изображений (до 25%)
-                    Imgproc.resize(targetSrc, targetSrc,
-                            new Size(targetSrc.cols() / 2.0, targetSrc.rows() / 2.0));
+                    // Преобразование загруженного шаблона в оттенки серого
+                    Mat targetGray = new Mat(targetSrc.rows(), targetSrc.cols(), CvType.CV_8UC1);
+                    Imgproc.cvtColor(targetSrc, targetGray, Imgproc.COLOR_BGR2GRAY);
+
+                    // Изменение размеров изображения (до 25%)
                     Imgproc.resize(templateSrc, templateSrc,
                             new Size(templateSrc.cols() / 2.0, templateSrc.rows() / 2.0));
+
+
+//                    Mat sourceGray = new Mat(templateSrc.rows(), templateSrc.cols(), CvType.CV_8UC1);
+//                    Imgproc.cvtColor(templateSrc, sourceGray, Imgproc.COLOR_BGR2GRAY);
+//                    Mat sourceHist = Hists.createHist(sourceGray);
+//                    ImageIO.saveImage(
+//                            "img\\processed\\" + DEFECT_TYPE + "\\" +
+//                                    imageName.substring(0, imageName.length() - 4) + "_source_hist" + IMG_LOAD_FORMAT,
+//                            sourceHist
+//                    );
+//
+//                    Mat filteredImg = Filters.applyGaussianBlur(sourceGray);
+//                    ImageIO.saveImage(
+//                            "img\\processed\\" + DEFECT_TYPE + "\\" +
+//                                    imageName.substring(0, imageName.length() - 4) + "_filtered" + IMG_SAVE_FORMAT,
+//                            filteredImg
+//                    );
+//                    Mat filteredHist = Hists.createHist(filteredImg);
+//                    ImageIO.saveImage(
+//                            "img\\processed\\" + DEFECT_TYPE + "\\" +
+//                                    imageName.substring(0, imageName.length() - 4) + "_filtered_hist" + IMG_LOAD_FORMAT,
+//                            filteredHist
+//                    );
+//
+//                    Mat claheImg = Filters.applyCLAHE(filteredImg);
+//                    ImageIO.saveImage(
+//                            "img\\processed\\" + DEFECT_TYPE + "\\" +
+//                                    imageName.substring(0, imageName.length() - 4) + "_clahe" + IMG_SAVE_FORMAT,
+//                            claheImg
+//                    );
+//                    Mat claheHist = Hists.createHist(claheImg);
+//                    ImageIO.saveImage(
+//                            "img\\processed\\" + DEFECT_TYPE + "\\" +
+//                                    imageName.substring(0, imageName.length() - 4) + "_clahe_hist" + IMG_LOAD_FORMAT,
+//                            claheHist
+//                    );
+
 
                     // Начало замера времени работы
                     long startTime = System.currentTimeMillis();
 
                     // Предварительная обработка изображений
-                    Mat preprocessedTarget = preProcessImage(targetSrc);
                     Mat preprocessedTemplate = preProcessImage(templateSrc);
 
                     // Поиск дефектов методом сравнения с шаблоном
-                    Mat matchedImg = matchTemplate(preprocessedTarget, preprocessedTemplate);
+                    Mat matchedImg = matchTemplate(targetGray, preprocessedTemplate);
 
                     // Постобработка изображения
                     Mat dilatedImg = postProcessImage(matchedImg);
@@ -203,34 +278,34 @@ public class Main {
     }
 
     private static void annotateImages() {
-        // Визуализируем аннотации
         try (Stream<Path> pathStream = Files.walk(Paths.get(DatasetProcessing.IMG_DIR))) {
-            // Парсим аннотации для всех файлов
+            // Парсинг аннотаций для всех файлов
             List<List<Map<String, String>>> annotations = DatasetProcessing.parseAllAnnotations();
 
+            // Визуализация аннотаций
             List<Path> pathList = pathStream.toList();
             for (Path path : pathList) {
                 String pathString = path.toString();
                 if (pathString.toLowerCase().endsWith(".jpg")) {
-                    // Получаем имя изображения
+                    // Получение имя изображения
                     String[] splittedPath = pathString.split("\\\\");
                     String imageName = splittedPath[splittedPath.length - 1];
 
-                    // Загружаем изображение
+                    // Загрузка изображение
                     Mat loadedImage = ImageIO.loadImage(pathString);
 
-                    // Визуализируем аннотации для изображения.
+                    // Визуализация аннотаций для изображения
                     Mat visualisedAnnot = Processing.visualizeAnnotations(
                             loadedImage,
                             annotations,
                             imageName
                     );
 
-                    // Собираем путь для сохранения файла
+                    // Сборка пути для сохранения файла
                     String pathToSave = "img\\annotated\\" + DatasetProcessing.getSubfolder(imageName) + "\\" +
                             imageName.substring(0, imageName.length() - 4) + "_annotated.png";
 
-                    // Сохраняем аннотированный файл
+                    // Сохранение аннотированного файла
                     ImageIO.saveImage(pathToSave, visualisedAnnot);
                 }
             }
