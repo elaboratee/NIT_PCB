@@ -92,9 +92,14 @@ public class Main {
             // Поток путей к файлам из директории
             List<Path> pathList = pathStream.toList();
 
-            // Обработка файлов из директории
-            Mat targetSrc = null;
+            // Инициализация матриц, связанных с шаблоном, для экономии памяти
+            Mat targetSrc;
+            Mat targetGray = null;
+
+            // Код последнего загруженного шаблона
             String lastLoadedTemplate = "";
+
+            // Обработка файлов из директории
             for (Path path : pathList) {
                 String pathString = path.toString();
                 if (pathString.endsWith(".jpg")) {
@@ -105,14 +110,15 @@ public class Main {
                     // Загрузка изображений
                     String templateCode = imageName.substring(0, 2);
                     if (!lastLoadedTemplate.equals(templateCode)) {
+                        // Загрузка нового шаблона и обновление кода
                         targetSrc = ImageIO.loadImage("img\\templates\\" + templateCode + IMG_LOAD_FORMAT);
                         lastLoadedTemplate = templateCode;
+
+                        // Преобразование нового шаблона к оттенкам серого
+                        targetGray = new Mat(targetSrc.rows(), targetSrc.cols(), CvType.CV_8UC1);
+                        Imgproc.cvtColor(targetSrc, targetGray, Imgproc.COLOR_BGR2GRAY);
                     }
                     Mat templateSrc = ImageIO.loadImage(pathString);
-
-                    // Преобразование загруженного шаблона в оттенки серого
-                    Mat targetGray = new Mat(targetSrc.rows(), targetSrc.cols(), CvType.CV_8UC1);
-                    Imgproc.cvtColor(targetSrc, targetGray, Imgproc.COLOR_BGR2GRAY);
 
                     // Изменение размеров изображения (до 25%)
                     Imgproc.resize(templateSrc, templateSrc,
