@@ -264,7 +264,7 @@ public class Main {
         // Отрисовка выделений дефектов
         List<Rect> boundingRects = Processing.getBoundingRects(contours);
         for (Rect rect : boundingRects) {
-            Imgproc.rectangle(boundedImg, rect, new Scalar(0, 0, 255), 1);
+            Imgproc.rectangle(boundedImg, rect, new Scalar(255, 255, 255), 2);
 
             if (rect.size().width >= 2 || rect.size().height >= 2) {
                 String logMsg = String.format("На плате %s обнаружен дефект. Координаты дефекта: (%d, %d; %d, %d)",
