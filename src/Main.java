@@ -32,6 +32,8 @@ public class Main {
     private static final String OPTIMIZATION_TYPE = "OPTIMIZED";
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
 
+    private static int defectCount;
+
     static {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
@@ -48,6 +50,18 @@ public class Main {
 
         // Поиск дефектов на изображениях
         findDefects();
+    }
+
+    private static int getDefectCount() {
+        return defectCount;
+    }
+
+    private static void setDefectCount(int defectCount) {
+        Main.defectCount = defectCount;
+    }
+
+    private static void incDefectCount() {
+        setDefectCount(getDefectCount() + 1);
     }
 
     private static void preProcessTemplates() {
@@ -189,9 +203,12 @@ public class Main {
                     );
 
                     // Запись данных в CSV
-                    writer.println(imageName + "," + processingTime + "," + templateSrc.size());
-                    writer.flush();
+                    writer.println(imageName + "," +
+                            processingTime + "," +
+                            templateSrc.size() + "," +
+                            getDefectCount());
                 }
+                writer.flush();
             }
         } catch (IOException | ImageReadException | ImageWriteException e) {
             throw new RuntimeException(e);
@@ -261,12 +278,19 @@ public class Main {
         Mat boundedImg = new Mat();
         targetImg.copyTo(boundedImg);
 
+        // Обнуление количества обнаруженных дефектов
+        setDefectCount(0);
+
         // Отрисовка выделений дефектов
         List<Rect> boundingRects = Processing.getBoundingRects(contours);
         for (Rect rect : boundingRects) {
             Imgproc.rectangle(boundedImg, rect, new Scalar(255, 255, 255), 2);
 
             if (rect.size().width >= 2 || rect.size().height >= 2) {
+                // Инкремент счетчика дефектов
+                incDefectCount();
+
+                // Логирование дефекта
                 String logMsg = String.format("На плате %s обнаружен дефект. Координаты дефекта: (%d, %d; %d, %d)",
                         imgName.substring(0, imgName.length() - 4),
                         rect.x, rect.y,
@@ -284,7 +308,12 @@ public class Main {
     }
 
     private static void annotateImages() {
-        try (Stream<Path> pathStream = Files.walk(Paths.get(DatasetProcessing.IMG_DIR))) {
+        // Путь к CSV-файлу
+        String csvFile = "info\\DEFECT_COUNT.csv";
+
+        try (Stream<Path> pathStream = Files.walk(Paths.get(DatasetProcessing.IMG_DIR));
+             PrintWriter writer = new PrintWriter(new FileWriter(csvFile))) {
+
             // Парсинг аннотаций для всех файлов
             List<List<Map<String, String>>> annotations = DatasetProcessing.parseAllAnnotations();
 
@@ -293,11 +322,11 @@ public class Main {
             for (Path path : pathList) {
                 String pathString = path.toString();
                 if (pathString.toLowerCase().endsWith(".jpg")) {
-                    // Получение имя изображения
+                    // Получение имени изображения
                     String[] splittedPath = pathString.split("\\\\");
                     String imageName = splittedPath[splittedPath.length - 1];
 
-                    // Загрузка изображение
+                    // Загрузка изображения
                     Mat loadedImage = ImageIO.loadImage(pathString);
 
                     // Визуализация аннотаций для изображения
@@ -313,6 +342,10 @@ public class Main {
 
                     // Сохранение аннотированного файла
                     ImageIO.saveImage(pathToSave, visualisedAnnot);
+
+                    // Запись данных в CSV-файл
+                    writer.println(imageName + "," + defectCount);
+                    writer.flush();
                 }
             }
         } catch (Exception e) {

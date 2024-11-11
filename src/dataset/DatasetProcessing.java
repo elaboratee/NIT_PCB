@@ -1,15 +1,16 @@
 package dataset;
 
+import exception.AnnotationParseException;
+
 import javax.management.modelmbean.XMLParseException;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -78,5 +79,52 @@ public class DatasetProcessing {
             }
         }
         return count;
+    }
+
+    public static void generateDefectCountCSV() {
+        // Имя CSV-файла
+        String csvFile = "info\\DEFECT_COUNT.csv";
+
+        List<Map<String, Integer>> defectData;
+        try (PrintWriter writer = new PrintWriter(new FileWriter(csvFile))) {
+            // Получение данных о дефектах
+            defectData = parseAllAnnotationsWithDefectCount();
+
+            for (Map<String, Integer> data : defectData) {
+                for (Map.Entry<String, Integer> entry : data.entrySet()) {
+                    writer.println(entry.getKey() + "," + entry.getValue());
+                }
+            }
+            writer.flush();
+
+        } catch (IOException | AnnotationParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static List<Map<String, Integer>> parseAllAnnotationsWithDefectCount()
+            throws AnnotationParseException {
+
+        List<Map<String, Integer>> defectCountData = new ArrayList<>();
+        try (Stream<Path> pathStream = Files.walk(Paths.get(ANNOT_DIR))) {
+            List<Path> paths = pathStream.toList();
+            for (Path path : paths) {
+                if (path.toString().toLowerCase().endsWith(".xml")) {
+                    // Получение имени файла
+                    String fileName = path.getFileName().toString().replace(".xml", ".jpg");
+
+                    // Подсчет количества дефектов
+                    int defectCount = XMLParsing.countDefects(path.toString());
+
+                    // Сохранение информации
+                    Map<String, Integer> defectInfo = new HashMap<>();
+                    defectInfo.put(fileName, defectCount);
+                    defectCountData.add(defectInfo);
+                }
+            }
+        } catch (IOException | XMLParseException e) {
+            throw new AnnotationParseException(e);
+        }
+        return defectCountData;
     }
 }

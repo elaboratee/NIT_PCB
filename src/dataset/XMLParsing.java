@@ -61,6 +61,29 @@ public class XMLParsing {
         return data;
     }
 
+    public static int countDefects(String path) throws XMLParseException {
+        int defectCount;
+        try {
+            // Загрузка XML-файла
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document document = builder.parse(new File(path));
+
+            // Получение корневого элемента
+            Element rootElement = document.getDocumentElement();
+
+            // Получение списка дочерних элементов
+            NodeList nodeList = rootElement.getElementsByTagName("object");
+
+            // Получение количества дефектов
+            defectCount = nodeList.getLength();
+
+        } catch (Exception e) {
+            throw new XMLParseException("Ошибка парсинга XML-файла: " + path);
+        }
+        return defectCount;
+    }
+
     /**
      * Extracts attribute values for given {@code Element}
      * @param element for which attribute values need to be extracted
@@ -87,4 +110,5 @@ public class XMLParsing {
 
         return attributes;
     }
+
 }
