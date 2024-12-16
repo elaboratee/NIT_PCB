@@ -29,7 +29,6 @@ public class ProcessSinglePanel extends JPanel {
     public JPanel getProcessSinglePanel() {
         // Основная панель
         panel = new JPanel(new GridLayout(1, 2, 10, 10));
-        panel.setBackground(Color.GRAY);
 
         // Панели для шаблонного и целевого изображения
         templatePanel = createImagePanel();
@@ -44,7 +43,7 @@ public class ProcessSinglePanel extends JPanel {
     // Метод для создания панели изображения
     private JPanel createImagePanel() {
         JPanel imagePanel = new JPanel(new BorderLayout());
-        imagePanel.setBackground(Color.WHITE);
+        imagePanel.setBackground(new Color(0x181818));
         imagePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
 
         JLabel imageLabel = new JLabel();
@@ -168,12 +167,30 @@ public class ProcessSinglePanel extends JPanel {
 
     // Метод для отображения изображения на фрейм
     private void displayImage(Mat image, JLabel label) {
-        ImageIcon imageIcon = new ImageIcon(matToBufferedImage(image).getScaledInstance(
-                tk.getScreenSize().width / 4,
-                tk.getScreenSize().height / 2,
-                Image.SCALE_SMOOTH)
-        );
+        // Получение оригинальных размеров изображения
+        BufferedImage bufferedImage = matToBufferedImage(image);
+        int originalWidth = bufferedImage.getWidth();
+        int originalHeight = bufferedImage.getHeight();
+
+        // Получение доступного размера панели
+        int maxWidth = tk.getScreenSize().width / 3;
+        int maxHeight = tk.getScreenSize().height / 2;
+
+        // Расчет новых размеров с сохранением пропорций
+        double widthRatio = (double) maxWidth / originalWidth;
+        double heightRatio = (double) maxHeight / originalHeight;
+        double scale = Math.min(widthRatio, heightRatio);
+
+        int newWidth = (int) (originalWidth * scale);
+        int newHeight = (int) (originalHeight * scale);
+
+        // Масштабирование изображения с сохранением пропорций
+        Image scaledImage = bufferedImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+
+        // Установка изображения на JLabel
+        ImageIcon imageIcon = new ImageIcon(scaledImage);
         label.setIcon(imageIcon);
+
         panel.repaint();
     }
 
