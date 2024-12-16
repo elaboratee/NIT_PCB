@@ -22,5 +22,6 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="library" name="formdev.flatlaf.intellij.themes" level="application" />
   </component>
 </module>

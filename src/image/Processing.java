@@ -1,74 +1,14 @@
 package image;
 
-import dataset.DatasetProcessing;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class Processing {
 
     private static final int KERNEL_SIZE = 5;
-
-    public static Mat visualizeAnnotations(Mat img,
-                                           List<List<Map<String, String>>> allAnnotations,
-                                           String imageName) {
-        // Фильтруем аннотации для текущего изображения
-        List<Map<String, String>> filteredAnnotations =
-                DatasetProcessing.filterAnnotationsByFilename(allAnnotations, imageName);
-
-        // Визуализируем аннотации
-        for (Map<String, String> annotation : filteredAnnotations) {
-            String classLabel = annotation.get("name");
-            int xmin = Integer.parseInt(annotation.get("xmin"));
-            int ymin = Integer.parseInt(annotation.get("ymin"));
-            int xmax = Integer.parseInt(annotation.get("xmax"));
-            int ymax = Integer.parseInt(annotation.get("ymax"));
-
-            // Рисуем рамку, выделяющую дефект
-            Imgproc.rectangle(
-                    img,
-                    new Point(xmin, ymin),
-                    new Point(xmax, ymax),
-                    new Scalar(255, 255, 255),
-                    3
-            );
-
-            // Получаем размер подписи
-            int[] baseLine = {0};
-            Size textSize = Imgproc.getTextSize(
-                    classLabel,
-                    Imgproc.FONT_HERSHEY_SIMPLEX,
-                    1.5,
-                    2,
-                    baseLine
-            );
-
-            // Добавляем background для подписи
-            Imgproc.rectangle(
-                    img,
-                    new Point(xmin, ymin - textSize.height - 5),
-                    new Point(xmin + textSize.width, ymin - 1),
-                    new Scalar(255, 255, 255),
-                    -1
-            );
-
-            // Добавляем подпись к рамке дефекта
-            Imgproc.putText(
-                    img,
-                    classLabel,
-                    new Point(xmin, ymin - 5),
-                    Imgproc.FONT_HERSHEY_SIMPLEX,
-                    1.5,
-                    new Scalar(0, 0, 0),
-                    2
-            );
-        }
-
-        return img;
-    }
 
     public static Mat matchTemplateOptimized(Mat target,
                                              Mat template) {
