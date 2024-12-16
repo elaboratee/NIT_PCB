@@ -2,14 +2,18 @@ package gui;
 
 import exception.ImageReadException;
 import exception.ImageWriteException;
+import image.Filters;
 import image.ImageIO;
-import org.opencv.core.Mat;
+import image.Processing;
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.util.List;
 
 public class ProcessSinglePanel extends JPanel {
 
@@ -132,7 +136,56 @@ public class ProcessSinglePanel extends JPanel {
 
     // Обработка целевого изображения
     private void processTargetImage() {
-        // TODO: Логика обработки целевого изображения
+        // Клонирование исходных изображений
+        Mat templateCopy = templateImage.clone();
+        Mat targetCopy = targetImage.clone();
+
+        // Изменение размеров изображений (до 25%)
+        Imgproc.resize(templateCopy, templateCopy,
+                new Size((double) templateCopy.cols() / 2, (double) templateCopy.rows() / 2));
+        Imgproc.resize(targetCopy, targetCopy,
+                new Size((double) targetCopy.cols() / 2, (double) targetCopy.rows() / 2));
+
+        // Преобразование исходных изображений к оттенкам серого
+        Mat templateGray = new Mat(templateCopy.rows(), templateCopy.cols(), CvType.CV_8UC1);
+        Mat targetGray = new Mat(targetCopy.rows(), targetCopy.cols(), CvType.CV_8UC1);
+
+        Imgproc.cvtColor(templateCopy, templateGray, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.cvtColor(targetCopy, targetGray, Imgproc.COLOR_BGR2GRAY);
+
+        // Применение размытия по Гауссу
+        Mat templateBlur = Filters.applyGaussianBlur(templateGray);
+        Mat targetBlur = Filters.applyGaussianBlur(targetGray);
+
+        // Выравнивание гистограммы
+        Mat templateCLAHE = Filters.applyCLAHE(templateBlur);
+        Mat targetCLAHE = Filters.applyCLAHE(targetBlur);
+
+        // Поиск дефектов методом сравнения с шаблоном
+        Mat matchedImg = Processing.matchTemplateOptimized(templateCLAHE, targetCLAHE);
+
+        // Постобработка изображения
+        Mat dilatedImg = Processing.dilateImage(matchedImg);
+
+        // Поиск контуров
+        List<MatOfPoint> contours = Processing.findContours(dilatedImg);
+
+        // Создание изображения с выделенными дефектами
+        Mat boundedImg = new Mat();
+        targetCopy.copyTo(boundedImg);
+
+        // Отрисовка выделений дефектов
+        List<Rect> boundingRects = Processing.getBoundingRects(contours);
+        for (Rect rect : boundingRects) {
+            Imgproc.rectangle(boundedImg, rect, new Scalar(255, 0, 255), 2);
+        }
+
+        // Вывод изображения на панель
+        displayImage(boundedImg, targetLabel);
+        targetImage = boundedImg;
+        panel.repaint();
+
+        processTargetButton.setEnabled(false);
         saveTargetButton.setEnabled(true);
     }
 
@@ -173,8 +226,8 @@ public class ProcessSinglePanel extends JPanel {
         int originalHeight = bufferedImage.getHeight();
 
         // Получение доступного размера панели
-        int maxWidth = tk.getScreenSize().width / 3;
-        int maxHeight = tk.getScreenSize().height / 2;
+        int maxWidth = (int) (tk.getScreenSize().width / 2.5);
+        int maxHeight = (int) (tk.getScreenSize().height / 2.0);
 
         // Расчет новых размеров с сохранением пропорций
         double widthRatio = (double) maxWidth / originalWidth;
@@ -196,13 +249,22 @@ public class ProcessSinglePanel extends JPanel {
 
     // Метод для преобразования Mat из OpenCV в BufferedImage из AWT
     private BufferedImage matToBufferedImage(Mat mat) {
+        int type;
+        if (mat.channels() == 1) {
+            type = BufferedImage.TYPE_BYTE_GRAY;
+        } else if (mat.channels() == 3) {
+            type = BufferedImage.TYPE_3BYTE_BGR;
+        } else {
+            throw new IllegalArgumentException("Не поддерживаемое количество каналов матрицы: " + mat.channels());
+        }
+
         int width = mat.width();
         int height = mat.height();
         int channels = mat.channels();
         byte[] data = new byte[width * height * channels];
 
         mat.get(0, 0, data);
-        BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+        BufferedImage bufferedImage = new BufferedImage(width, height, type);
         bufferedImage.getRaster().setDataElements(0, 0, width, height, data);
         return bufferedImage;
     }
