@@ -54,6 +54,7 @@ public class ProcessSinglePanel extends JPanel {
         return panel;
     }
 
+    // Метод для создания и заполнения кнопками панели целевого изображения
     private JPanel getTargetButtonPanel() {
         JPanel buttonPanel = new JPanel(new GridLayout(1, 3));
 
@@ -68,6 +69,7 @@ public class ProcessSinglePanel extends JPanel {
         return buttonPanel;
     }
 
+    // Метод для создания и заполнения кнопками панели шаблона
     private JPanel getTemplateButtonPanel() {
         JPanel buttonPanel = new JPanel(new GridLayout(1, 1));
 
