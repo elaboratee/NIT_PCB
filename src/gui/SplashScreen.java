@@ -27,11 +27,11 @@ public class SplashScreen {
         splashFrame.add(layeredPane);
 
         // Добавление иконки
-        ImageIcon icon = new ImageIcon("img" + File.separator + "icon.png");
+        ImageIcon icon = new ImageIcon("media" + File.separator + "icon.png");
         splashFrame.setIconImage(icon.getImage());
 
         // Добавление изображения
-        ImageIcon imageIcon = new ImageIcon("img" + File.separator + "splash_screen.png");
+        ImageIcon imageIcon = new ImageIcon("media" + File.separator + "splash_screen.png");
         imageIcon.setImage(imageIcon.getImage().getScaledInstance(680, 380, Image.SCALE_SMOOTH));
         JLabel imageLabel = new JLabel(imageIcon);
         imageLabel.setBounds(10, 10, imageIcon.getIconWidth(), imageIcon.getIconHeight());
