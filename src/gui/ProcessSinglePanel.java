@@ -8,6 +8,7 @@ import org.opencv.core.Mat;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
 public class ProcessSinglePanel extends JPanel {
@@ -27,172 +28,148 @@ public class ProcessSinglePanel extends JPanel {
 
     public JPanel getProcessSinglePanel() {
         // Основная панель
-        panel = new JPanel(new BorderLayout());
+        panel = new JPanel(new GridLayout(1, 2, 10, 10));
+        panel.setBackground(Color.GRAY);
 
         // Панели для шаблонного и целевого изображения
-        templatePanel = new JPanel(new BorderLayout());
-        targetPanel = new JPanel(new BorderLayout());
-
-        // Создание элементов панели для отображения изображений
-        templateLabel = new JLabel();
-        templatePanel.add(templateLabel, BorderLayout.SOUTH);
-
-        targetLabel = new JLabel();
-        targetPanel.add(targetLabel, BorderLayout.SOUTH);
+        templatePanel = createImagePanel();
+        targetPanel = createImagePanel();
 
         panel.add(templatePanel, BorderLayout.WEST);
         panel.add(targetPanel, BorderLayout.EAST);
 
-        // Создание панели кнопок целевого изображения
-        JPanel targetButtonPanel = getTargetButtonPanel();
-        targetPanel.add(targetButtonPanel, BorderLayout.NORTH);
-
-        // Кнопки для панели шаблонного изображения
-        JPanel templateButtonPanel = getTemplateButtonPanel();
-        templatePanel.add(templateButtonPanel, BorderLayout.NORTH);
-
         return panel;
     }
 
-    // Метод для создания и заполнения кнопками панели целевого изображения
-    private JPanel getTargetButtonPanel() {
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 3));
+    // Метод для создания панели изображения
+    private JPanel createImagePanel() {
+        JPanel imagePanel = new JPanel(new BorderLayout());
+        imagePanel.setBackground(Color.WHITE);
+        imagePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
 
-        loadTargetButton = getLoadTargetButton();
-        processTargetButton = getProcessTargetButton();
-        saveTargetButton = getSaveTargetButton();
+        JLabel imageLabel = new JLabel();
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
+        imagePanel.add(imageLabel, BorderLayout.CENTER);
 
-        buttonPanel.add(loadTargetButton);
-        buttonPanel.add(processTargetButton);
-        buttonPanel.add(saveTargetButton);
+        JPanel buttonPanel = createButtonPanel();
+        imagePanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        return buttonPanel;
+        if (templateLabel == null) {
+            templateLabel = imageLabel;
+        } else {
+            targetLabel = imageLabel;
+        }
+
+        return imagePanel;
     }
 
-    // Метод для создания и заполнения кнопками панели шаблона
-    private JPanel getTemplateButtonPanel() {
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 1));
+    // Метод для создания панели кнопок
+    private JPanel createButtonPanel() {
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 5, 5));
+        buttonPanel.setOpaque(false);
 
-        loadTemplateButton = getLoadTemplateButton();
-        buttonPanel.add(loadTemplateButton);
+        if (templatePanel == null) {
+            loadTemplateButton = createButton("Загрузить шаблон", e -> loadTemplateImage());
+            buttonPanel.add(loadTemplateButton);
+        } else {
+            loadTargetButton = createButton("Загрузить изображение", e -> loadTargetImage());
+            processTargetButton = createButton("Обработать", e -> processTargetImage());
+            saveTargetButton = createButton("Сохранить", e -> saveTargetImage());
 
-        return buttonPanel;
-    }
+            buttonPanel.add(loadTargetButton);
+            buttonPanel.add(processTargetButton);
+            buttonPanel.add(saveTargetButton);
 
-    // Метод для получения кнопки загрузки шаблона
-    private JButton getLoadTemplateButton() {
-        JButton button = new JButton("Загрузить шаблон");
-
-        button.addActionListener(e -> {
-            // Отключение кнопок
             loadTargetButton.setEnabled(false);
             processTargetButton.setEnabled(false);
             saveTargetButton.setEnabled(false);
+        }
 
-            // Создание и настройка JFileChooser
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Выберите изображение");
+        return buttonPanel;
+    }
 
-            // Установка фильтра для выбора только изображений
-            FileNameExtensionFilter imageFilter = new FileNameExtensionFilter(
-                    "Изображения (JPG, PNG, BMP, GIF)", "jpg", "jpeg", "png", "bmp", "gif"
-            );
-            fileChooser.setFileFilter(imageFilter);
+    // Метод для создания кнопки с заданными текстом и действием
+    private JButton createButton(String text, ActionListener action) {
+        JButton button = new JButton(text);
+        button.addActionListener(action);
+        button.setPreferredSize(new Dimension(150, 40));
+        return button;
+    }
 
-            // Показ диалога выбора файла
-            int result = fileChooser.showOpenDialog(panel);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
-                try {
-                    templateImage = ImageIO.loadImage(imagePath);
-                } catch (ImageReadException ire) {
-                    throw new RuntimeException("Ошибка при загрузке изображения: " + ire.getMessage(), ire);
-                }
+    // Загрузка шаблонного изображения
+    private void loadTemplateImage() {
+        loadTargetButton.setEnabled(false);
+        processTargetButton.setEnabled(false);
+        saveTargetButton.setEnabled(false);
 
-                // Отображение загруженного изображения
+        JFileChooser fileChooser = createImageFileChooser();
+        if (fileChooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
+            String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
+            try {
+                templateImage = ImageIO.loadImage(imagePath);
                 displayImage(templateImage, templateLabel);
                 loadTargetButton.setEnabled(true);
+            } catch (ImageReadException ire) {
+                showErrorDialog("Ошибка при загрузке шаблонного изображения: " + ire.getMessage());
             }
-        });
-
-        return button;
+        }
     }
 
-    // Метод для получения кнопки загрузки целевого изображения
-    private JButton getLoadTargetButton() {
-        JButton button = new JButton("Загрузить изображение");
-
-        button.addActionListener(e -> {
-            // Создание и настройка JFileChooser
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Выберите изображение");
-
-            // Установка фильтра для выбора только изображений
-            FileNameExtensionFilter imageFilter = new FileNameExtensionFilter(
-                    "Изображения (JPG, PNG, BMP, GIF)", "jpg", "jpeg", "png", "bmp", "gif"
-            );
-            fileChooser.setFileFilter(imageFilter);
-
-                    // Показ диалога выбора файла
-                    int result = fileChooser.showOpenDialog(panel);
-                    if (result == JFileChooser.APPROVE_OPTION) {
-                        String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
-                        try {
-                            targetImage = ImageIO.loadImage(imagePath);
-                        } catch (ImageReadException ire) {
-                            throw new RuntimeException("Ошибка при загрузке изображения: " + ire.getMessage(), ire);
-                        }
-
-                        // Отображение загруженного изображения
-                        displayImage(targetImage, targetLabel);
-                        processTargetButton.setEnabled(true);
-                    }
-        });
-        button.setEnabled(false);
-
-        return button;
-    }
-
-    // Метод для получения кнопки обработки целевого изображения
-    private JButton getProcessTargetButton() {
-        JButton button = new JButton("Обработать");
-
-        button.addActionListener(e -> {
-            saveTargetButton.setEnabled(true);
-        });
-        button.setEnabled(false);
-
-        return button;
-    }
-
-    // Метод для получения кнопки сохранения целевого изображения
-    private JButton getSaveTargetButton() {
-        JButton button = new JButton("Сохранить");
-
-        button.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Сохраните изображение");
-
-            int result = fileChooser.showSaveDialog(panel);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                String savePath = fileChooser.getSelectedFile().getAbsolutePath();
-
-                try {
-                    ImageIO.saveImage(savePath + ".png", targetImage);
-                } catch (ImageWriteException iwe) {
-                    throw new RuntimeException("Ошибка при сохранении изображения: " + iwe.getMessage(), iwe);
-                }
+    // Загрузка целевого изображения
+    private void loadTargetImage() {
+        JFileChooser fileChooser = createImageFileChooser();
+        if (fileChooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
+            String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
+            try {
+                targetImage = ImageIO.loadImage(imagePath);
+                displayImage(targetImage, targetLabel);
+                processTargetButton.setEnabled(true);
+            } catch (ImageReadException ire) {
+                showErrorDialog("Ошибка при загрузке целевого изображения: " + ire.getMessage());
             }
-        });
-        button.setEnabled(false);
+        }
+    }
 
-        return button;
+    // Обработка целевого изображения
+    private void processTargetImage() {
+        // TODO: Логика обработки целевого изображения
+        saveTargetButton.setEnabled(true);
+    }
+
+    // Сохранение целевого изображения
+    private void saveTargetImage() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Сохраните изображение");
+        if (fileChooser.showSaveDialog(panel) == JFileChooser.APPROVE_OPTION) {
+            String savePath = fileChooser.getSelectedFile().getAbsolutePath() + ".png";
+            try {
+                ImageIO.saveImage(savePath, targetImage);
+            } catch (ImageWriteException iwe) {
+                showErrorDialog("Ошибка при сохранении изображения: " + iwe.getMessage());
+            }
+        }
+    }
+
+    // Метод для создания настроенного JFileChooser
+    private JFileChooser createImageFileChooser() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Выберите изображение");
+        fileChooser.setFileFilter(new FileNameExtensionFilter(
+                "Изображения (JPG, PNG, BMP, GIF)", "jpg", "jpeg", "png", "bmp", "gif")
+        );
+        return fileChooser;
+    }
+
+    // Метод для отображения сообщения об ошибке
+    private void showErrorDialog(String message) {
+        JOptionPane.showMessageDialog(panel, message, "Ошибка", JOptionPane.ERROR_MESSAGE);
     }
 
     // Метод для отображения изображения на фрейм
     private void displayImage(Mat image, JLabel label) {
         ImageIcon imageIcon = new ImageIcon(matToBufferedImage(image).getScaledInstance(
-                tk.getScreenSize().width / 2,
+                tk.getScreenSize().width / 4,
                 tk.getScreenSize().height / 2,
                 Image.SCALE_SMOOTH)
         );
