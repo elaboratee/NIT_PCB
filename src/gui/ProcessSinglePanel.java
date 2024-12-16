@@ -12,7 +12,11 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.awt.image.RasterFormatException;
 import java.util.List;
 
 public class ProcessSinglePanel extends JPanel {
@@ -53,7 +57,13 @@ public class ProcessSinglePanel extends JPanel {
         JLabel imageLabel = new JLabel();
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         imageLabel.setVerticalAlignment(SwingConstants.CENTER);
-        imagePanel.add(imageLabel, BorderLayout.CENTER);
+
+        JScrollPane scrollPane = new JScrollPane(imageLabel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(new Color(0x181818));
+        imagePanel.add(scrollPane, BorderLayout.CENTER);
 
         JPanel buttonPanel = createButtonPanel();
         imagePanel.add(buttonPanel, BorderLayout.SOUTH);
