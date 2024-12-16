@@ -12,6 +12,7 @@ public class BorderProgressBar extends JPanel {
         setOpaque(false);
     }
 
+    // Метод для запуска анимации прогресс-бара
     public void startAnimation() {
         Timer timer = new Timer(20, e -> {
             progressPosition += STEP_SIZE;
@@ -24,6 +25,7 @@ public class BorderProgressBar extends JPanel {
         timer.start();
     }
 
+    // Метод для вычисления периметра компонента
     private int getPerimeter() {
         Rectangle bounds = targetComponent.getBounds();
         int width = bounds.width + 10;
@@ -31,6 +33,7 @@ public class BorderProgressBar extends JPanel {
         return 2 * (width + height);
     }
 
+    // Метод для отрисовки прогресс-бара
     private void drawProgressBar(Graphics2D g2, int x, int y, int width, int height) {
         int pos = progressPosition;
         if (pos < width) {

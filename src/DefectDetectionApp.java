@@ -8,6 +8,8 @@ import org.opencv.core.Mat;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.Random;
 
 public class DefectDetectionApp {
 
@@ -28,7 +30,8 @@ public class DefectDetectionApp {
 
     private static void display() {
         SplashScreen.showSplashScreen();
-        Timer timer = new Timer(10000, e -> {
+        Random rand = new Random(System.currentTimeMillis());
+        Timer timer = new Timer(rand.nextInt(3000, 7000), e -> {
             SplashScreen.closeSplashScreen();
             SwingUtilities.invokeLater(() -> {
                 new DefectDetectionApp().initialize();
@@ -55,14 +58,14 @@ public class DefectDetectionApp {
 
     private void initialize() {
         // Настройка главного окна
-        frame = new JFrame("Распознавание дефектов печатных плат");
+        frame = new JFrame("SurfaceScout");
         frame.setLayout(new BorderLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocation(getScreenCenter());
         frame.setSize(getScreenWidth() / 2, getScreenHeight() / 2);
 
         // Установка иконки
-        ImageIcon icon = new ImageIcon("img/icon.png");
+        ImageIcon icon = new ImageIcon("img" + File.separator + "icon.png");
         frame.setIconImage(icon.getImage());
 
         // Панель для отображения изображений
