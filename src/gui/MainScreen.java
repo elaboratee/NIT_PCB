@@ -20,7 +20,7 @@ public class MainScreen {
         frame.setSize(getScreenWidth() / 2, getScreenHeight() / 2);
 
         // Установка иконки
-        ImageIcon icon = new ImageIcon("media" + File.separator + "icon.png");
+        ImageIcon icon = new ImageIcon("img" + File.separator + "icon.png");
         frame.setIconImage(icon.getImage());
 
         // Создание панели обработки одного изображения

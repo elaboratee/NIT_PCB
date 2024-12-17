@@ -134,6 +134,7 @@ public class ProcessSinglePanel extends JPanel {
                 targetImage = ImageIO.loadImage(imagePath);
                 displayImage(targetImage, targetLabel);
                 processTargetButton.setEnabled(true);
+                saveTargetButton.setEnabled(false);
             } catch (ImageReadException ire) {
                 showErrorDialog("Ошибка при загрузке целевого изображения: " + ire.getMessage());
             }
@@ -142,6 +143,12 @@ public class ProcessSinglePanel extends JPanel {
 
     // Обработка целевого изображения
     private void processTargetImage() {
+        // Отключение кнопок
+        loadTemplateButton.setEnabled(false);
+        loadTargetButton.setEnabled(false);
+        processTargetButton.setEnabled(false);
+        saveTargetButton.setEnabled(false);
+
         // Клонирование исходных изображений
         Mat templateCopy = templateImage.clone();
         Mat targetCopy = targetImage.clone();
@@ -191,7 +198,9 @@ public class ProcessSinglePanel extends JPanel {
         targetImage = boundedImg;
         panel.repaint();
 
-        processTargetButton.setEnabled(false);
+        // Включение кнопок
+        loadTemplateButton.setEnabled(true);
+        loadTargetButton.setEnabled(true);
         saveTargetButton.setEnabled(true);
     }
 
