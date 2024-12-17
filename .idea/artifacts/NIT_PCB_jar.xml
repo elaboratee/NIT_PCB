@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="NIT_PCB:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/NIT_PCB_jar</output-path>
+    <root id="archive" name="NIT_PCB.jar">
+      <element id="module-output" name="NIT_PCB" />
+      <element id="extracted-dir" path="C:/OpenCV/opencv_4_9/build/java/opencv-490.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../Компьютерная_графика/ЛАБЫ/CompGrapgh_LABS/lib/flatlaf-intellij-themes-3.5.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../Компьютерная_графика/ЛАБЫ/CompGrapgh_LABS/lib/flatlaf-3.5.2.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

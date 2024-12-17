@@ -1,19 +1,16 @@
 package gui;
 
-import org.opencv.core.Mat;
-
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
 public class MainScreen {
 
-    private static JFrame frame;
     private static final Toolkit tk = Toolkit.getDefaultToolkit();
 
     public static void showMainScreen() {
         // Настройка фрейма
-        frame = new JFrame("SurfaceScout");
+        JFrame frame = new JFrame("SurfaceScout");
         frame.setLayout(new BorderLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocation(getScreenCenter());
