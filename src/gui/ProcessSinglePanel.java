@@ -144,9 +144,9 @@ public class ProcessSinglePanel extends JPanel {
     // Обработка целевого изображения
     private void processTargetImage() {
         // Отключение кнопок
+        processTargetButton.setEnabled(false);
         loadTemplateButton.setEnabled(false);
         loadTargetButton.setEnabled(false);
-        processTargetButton.setEnabled(false);
         saveTargetButton.setEnabled(false);
 
         // Клонирование исходных изображений
@@ -223,7 +223,7 @@ public class ProcessSinglePanel extends JPanel {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Выберите изображение");
         fileChooser.setFileFilter(new FileNameExtensionFilter(
-                "Изображения (JPG, PNG, BMP, GIF)", "jpg", "jpeg", "png", "bmp", "gif")
+                "Изображения (JPG, PNG, BMP)", "jpg", "jpeg", "png", "bmp")
         );
         return fileChooser;
     }
