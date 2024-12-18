@@ -40,16 +40,16 @@ public class BorderProgressBar extends JPanel {
         int pos = progressPosition;
         if (pos < width) {
             // Верхняя сторона
-            g2.fillRect(x + pos, y - 5, 50, 10);
+            g2.fillRect(x + pos, y, 50, 10);
         } else if (pos < width + height) {
             // Правая сторона
-            g2.fillRect(x + width - 5, y + (pos - width), 10, 50);
+            g2.fillRect(x + width, y + (pos - width), 10, 50);
         } else if (pos < 2 * width + height) {
             // Нижняя сторона
-            g2.fillRect(x + (width - (pos - (width + height))), y + height - 5, 50, 10);
+            g2.fillRect(x + (width - (pos - (width + height))), y + height, 50, 10);
         } else {
             // Левая сторона
-            g2.fillRect(x - 5, y + (height - (pos - (2 * width + height))), 10, 50);
+            g2.fillRect(x, y + (height - (pos - (2 * width + height))), 10, 50);
         }
     }
 
@@ -63,8 +63,8 @@ public class BorderProgressBar extends JPanel {
 
         // Получение границ целевого компонента
         Rectangle bounds = targetComponent.getBounds();
-        int x = bounds.x - 5;
-        int y = bounds.y - 5;
+        int x = bounds.x - 10;
+        int y = bounds.y - 10;
         int width = bounds.width + 10;
         int height = bounds.height + 10;
 
