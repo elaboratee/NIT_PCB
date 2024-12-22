@@ -11,10 +11,13 @@ public class MainScreen {
     public static void showMainScreen() {
         // Настройка фрейма
         JFrame frame = new JFrame("SurfaceScout");
+        frame.setSize(
+                tk.getScreenSize().width / 2,
+                tk.getScreenSize().height / 2
+        );
         frame.setLayout(new BorderLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLocation(getScreenCenter());
-        frame.setSize(getScreenWidth() / 2, getScreenHeight() / 2);
+        frame.setLocationRelativeTo(null);
 
         // Установка иконки
         ImageIcon icon = new ImageIcon("img" + File.separator + "icon.png");
@@ -31,23 +34,5 @@ public class MainScreen {
 
         // Отображение фрейма
         frame.setVisible(true);
-    }
-
-    // Метод для получения центра экрана
-    private static Point getScreenCenter() {
-        return new Point(
-                getScreenWidth() / 2 - getScreenWidth() / 4,
-                getScreenHeight() / 2 - getScreenHeight() / 4
-        );
-    }
-
-    // Метод для получения ширины экрана
-    private static int getScreenWidth() {
-        return tk.getScreenSize().width;
-    }
-
-    // Метод для получения высоты экрана
-    private static int getScreenHeight() {
-        return tk.getScreenSize().height;
     }
 }

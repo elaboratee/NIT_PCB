@@ -13,6 +13,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.List;
 
 public class ProcessSinglePanel extends JPanel {
@@ -222,6 +223,7 @@ public class ProcessSinglePanel extends JPanel {
     private JFileChooser createImageFileChooser() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Выберите изображение");
+        fileChooser.setCurrentDirectory(new File("D:\\DATASETS\\PCB_DATASET"));
         fileChooser.setFileFilter(new FileNameExtensionFilter(
                 "Изображения (JPG, PNG, BMP)", "jpg", "jpeg", "png", "bmp")
         );
