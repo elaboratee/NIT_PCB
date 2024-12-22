@@ -1,9 +1,22 @@
 package gui;
 
+import exception.ImageReadException;
+import image.Filters;
+import image.ImageIO;
+import image.Processing;
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.List;
 
 public class ProcessManyPanel extends JPanel {
 
@@ -15,6 +28,7 @@ public class ProcessManyPanel extends JPanel {
     private JLabel imageLabel;
     private final JProgressBar progressBar;
     private final JFileChooser fileChooser;
+    private final Toolkit tk = Toolkit.getDefaultToolkit();
 
     private ProcessManyPanel() {
         // Создание верхней панели
@@ -173,7 +187,8 @@ public class ProcessManyPanel extends JPanel {
         // Получение изображений для обработки
         File imageDirectory = new File(imagePathField.getText());
         File[] imageFiles = imageDirectory
-                .listFiles((dir, name) -> name.endsWith(".jpg") || name.endsWith(".png"));
+                .listFiles((dir, name) -> name.toLowerCase().endsWith(".jpg") ||
+                        name.toLowerCase().endsWith(".png"));
         if (imageFiles == null || imageFiles.length == 0) {
             showErrorDialog("Директория с изображениями пуста!");
             return;
@@ -182,15 +197,141 @@ public class ProcessManyPanel extends JPanel {
         // Получение шаблонных изображений
         File templateDirectory = new File(templatePathField.getText());
         File[] templateFiles = templateDirectory
-                .listFiles((dir, name) -> name.endsWith(".jpg") || name.endsWith(".png"));
+                .listFiles((dir, name) -> name.toLowerCase().endsWith(".jpg") ||
+                        name.toLowerCase().endsWith(".png"));
         if (templateFiles == null || templateFiles.length == 0) {
             showErrorDialog("Директория с шаблонами пуста!");
             return;
         }
 
+        // Выключение кнопок
+        selectImageDirButton.setEnabled(false);
+        selectTemplateDirButton.setEnabled(false);
+        selectLogsButton.setEnabled(false);
+        processImagesButton.setEnabled(false);
+
         // Установка максимального и начального значений прогресс-бара
         progressBar.setMaximum(imageFiles.length);
         progressBar.setValue(0);
+
+        new Thread(() -> {
+            int time = Math.abs(Long.hashCode(System.currentTimeMillis()));
+            try (PrintWriter writer = new PrintWriter(
+                    new FileWriter(logsPathField.getText() + "\\logs_" + time + ".log"))) {
+                // Объявление матриц, связанных с шаблоном для экономии памяти
+                Mat templateSrc, templateGray = null;
+
+                // Обработка изображений
+                String lastLoadedTemplateCode = "";
+                int counter = 0;
+                for (File imageFile : imageFiles) {
+                    // Загрузка шаблонного изображения
+                    String templateCode = imageFile.getName().substring(0, 2);
+                    if (!templateCode.equals(lastLoadedTemplateCode)) {
+                        try {
+                            templateSrc = ImageIO.loadImage(
+                                    Arrays
+                                            .stream(templateFiles)
+                                            .filter(file -> file.getName().startsWith(templateCode))
+                                            .findFirst()
+                                            .orElseThrow(() ->
+                                                    new ImageReadException("Шаблон не найден для кода: " + templateCode))
+                                            .toString()
+                            );
+                        } catch (ImageReadException ire) {
+                            showErrorDialog("Ошибка при загрузке шаблонного изображения: " + ire.getMessage());
+                            selectImageDirButton.setEnabled(true);
+                            selectTemplateDirButton.setEnabled(true);
+                            selectLogsButton.setEnabled(true);
+                            processImagesButton.setEnabled(false);
+                            return;
+                        }
+                        lastLoadedTemplateCode = templateCode;
+
+                        // Уменьшение размеров нового шаблона
+                        Imgproc.resize(templateSrc, templateSrc,
+                                new Size((double) templateSrc.cols() / 2, (double) templateSrc.rows() / 2));
+
+                        // Преобразование нового шаблона к оттенкам серого
+                        templateGray = new Mat();
+                        Imgproc.cvtColor(templateSrc, templateGray, Imgproc.COLOR_BGR2GRAY);
+                    }
+
+                    // Загрузка исходного изображения
+                    Mat targetSrc;
+                    try {
+                        targetSrc = ImageIO.loadImage(imageFile.getAbsolutePath());
+                    } catch (ImageReadException ire) {
+                        showErrorDialog("Ошибка при загрузке исходного изображения: " + ire.getMessage());
+                        selectImageDirButton.setEnabled(true);
+                        selectTemplateDirButton.setEnabled(true);
+                        selectLogsButton.setEnabled(true);
+                        processImagesButton.setEnabled(false);
+                        return;
+                    }
+
+                    // Уменьшение размеров изображений
+                    Imgproc.resize(targetSrc, targetSrc,
+                            new Size((double) targetSrc.cols() / 2, (double) targetSrc.rows() / 2));
+
+                    // Преобразование исходного изображения к оттенкам серого
+                    Mat targetGray = new Mat();
+                    Imgproc.cvtColor(targetSrc, targetGray, Imgproc.COLOR_BGR2GRAY);
+
+                    // Применение размытия по Гауссу
+                    Mat templateBlur = Filters.applyGaussianBlur(templateGray);
+                    Mat targetBlur = Filters.applyGaussianBlur(targetGray);
+
+                    // Выравнивание гистограмм
+                    Mat templateCLAHE = Filters.applyCLAHE(templateBlur);
+                    Mat targetCLAHE = Filters.applyCLAHE(targetBlur);
+
+                    // Поиск дефектов методом сравнения с шаблоном
+                    Mat matchedImg = Processing.matchTemplateOptimized(templateCLAHE, targetCLAHE);
+
+                    // Постобработка изображения
+                    Mat dilatedImg = Processing.dilateImage(matchedImg);
+
+                    // Поиск контуров
+                    List<MatOfPoint> contours = Processing.findContours(dilatedImg);
+
+                    // Создание изображения с выделенными дефектами
+                    Mat boundedImg = new Mat();
+                    targetSrc.copyTo(boundedImg);
+
+                    // Отрисовка выделений дефектов
+                    List<Rect> boundingRects = Processing.getBoundingRects(contours);
+                    for (Rect rect : boundingRects) {
+                        if (rect.size().width >= 2 || rect.size().height >= 2) {
+                            Imgproc.rectangle(boundedImg, rect, new Scalar(255, 0, 255), 2);
+
+                            String logMsg = String.format(
+                                    "На плате %s обнаружен дефект. Координаты дефекта: (%d, %d; %d, %d)",
+                                    imageFile.getName(),
+                                    rect.x, rect.y,
+                                    rect.x + rect.width, rect.y + rect.height
+                            );
+                            writer.println(logMsg);
+                        }
+                    }
+                    writer.flush();
+
+                    // Вывод изображения на панель
+                    displayImage(boundedImg, imageLabel);
+
+                    // Увеличение счетчика прогресс-бара
+                    progressBar.setValue(++counter);
+                }
+            } catch (IOException e) {
+                showErrorDialog("Ошибка создания файла логов: " + e.getMessage());
+            }
+
+            // Включение кнопок
+            selectImageDirButton.setEnabled(true);
+            selectTemplateDirButton.setEnabled(true);
+            selectLogsButton.setEnabled(true);
+            processImagesButton.setEnabled(true);
+        }).start();
     }
 
     // Метод для создания настроенного JFileChooser
@@ -204,5 +345,54 @@ public class ProcessManyPanel extends JPanel {
     // Метод для отображения сообщения об ошибке
     private void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(this, message, "Ошибка", JOptionPane.ERROR_MESSAGE);
+    }
+
+    // Метод для отображения изображения на фрейм
+    private void displayImage(Mat image, JLabel label) {
+        // Получение оригинальных размеров изображения
+        BufferedImage bufferedImage = matToBufferedImage(image);
+        int originalWidth = bufferedImage.getWidth();
+        int originalHeight = bufferedImage.getHeight();
+
+        // Получение доступного размера панели
+        int maxWidth = (int) (tk.getScreenSize().width / 1.5);
+        int maxHeight = (int) (tk.getScreenSize().height / 2.0);
+
+        // Расчет новых размеров с сохранением пропорций
+        double widthRatio = (double) maxWidth / originalWidth;
+        double heightRatio = (double) maxHeight / originalHeight;
+        double scale = Math.min(widthRatio, heightRatio);
+
+        int newWidth = (int) (originalWidth * scale);
+        int newHeight = (int) (originalHeight * scale);
+
+        // Масштабирование изображения с сохранением пропорций
+        Image scaledImage = bufferedImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+
+        // Установка изображения на JLabel
+        ImageIcon imageIcon = new ImageIcon(scaledImage);
+        label.setIcon(imageIcon);
+    }
+
+    // Метод для преобразования Mat из OpenCV в BufferedImage из AWT
+    private BufferedImage matToBufferedImage(Mat mat) {
+        int type;
+        if (mat.channels() == 1) {
+            type = BufferedImage.TYPE_BYTE_GRAY;
+        } else if (mat.channels() == 3) {
+            type = BufferedImage.TYPE_3BYTE_BGR;
+        } else {
+            throw new IllegalArgumentException("Не поддерживаемое количество каналов матрицы: " + mat.channels());
+        }
+
+        int width = mat.width();
+        int height = mat.height();
+        int channels = mat.channels();
+        byte[] data = new byte[width * height * channels];
+
+        mat.get(0, 0, data);
+        BufferedImage bufferedImage = new BufferedImage(width, height, type);
+        bufferedImage.getRaster().setDataElements(0, 0, width, height, data);
+        return bufferedImage;
     }
 }
