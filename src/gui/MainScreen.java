@@ -23,16 +23,28 @@ public class MainScreen {
         ImageIcon icon = new ImageIcon("img" + File.separator + "icon.png");
         frame.setIconImage(icon.getImage());
 
-        // Создание панели обработки одного изображения
-        ProcessSinglePanel processSinglePanel = ProcessSinglePanel.createInstance();
-
         // Создание и заполнение панели вкладок
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
-        tabbedPane.addTab("Обработка одного изображения", processSinglePanel.getProcessSinglePanel());
+        JTabbedPane tabbedPane = getTabbedPane();
 
+        // Добавление панели вкладок на фрейм
         frame.add(tabbedPane, BorderLayout.CENTER);
 
         // Отображение фрейма
         frame.setVisible(true);
+    }
+
+    private static JTabbedPane getTabbedPane() {
+        // Создание панели обработки одного изображения
+        ProcessSinglePanel processSinglePanel = ProcessSinglePanel.getInstance();
+
+        // Создание панели обработки множества изображений
+        ProcessManyPanel processManyPanel = ProcessManyPanel.getInstance();
+
+        // Создание и заполнение панели вкладок
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
+        tabbedPane.addTab("Обработка одного изображения", processSinglePanel);
+        tabbedPane.addTab("Обработка множества изображений", processManyPanel);
+
+        return tabbedPane;
     }
 }

@@ -18,71 +18,79 @@ import java.util.List;
 
 public class ProcessSinglePanel extends JPanel {
 
-    private JPanel panel, templatePanel, targetPanel;
-    private JLabel templateLabel, targetLabel;
+    private static ProcessSinglePanel instance;
+
+    private final JPanel templatePanel, targetPanel;
+    private final JLabel templateLabel, targetLabel;
     private JButton loadTemplateButton, loadTargetButton, processTargetButton, saveTargetButton;
     private Mat templateImage, targetImage;
     private final Toolkit tk = Toolkit.getDefaultToolkit();
 
     private ProcessSinglePanel() {
+        // Лейблы для шаблонного и целевого изображений
+        templateLabel = createImageLabel();
+        targetLabel = createImageLabel();
+
+        // Панели для шаблонного и целевого изображений
+        templatePanel = createImagePanel(templateLabel);
+        targetPanel = createImagePanel(targetLabel);
+
+        // Заполнение родительской панели
+        setLayout(new GridLayout(1, 2, 10, 10));
+        add(templatePanel);
+        add(targetPanel);
     }
 
-    public static ProcessSinglePanel createInstance() {
-        return new ProcessSinglePanel();
-    }
-
-    public JPanel getProcessSinglePanel() {
-        // Основная панель
-        panel = new JPanel(new GridLayout(1, 2, 10, 10));
-
-        // Панели для шаблонного и целевого изображения
-        templatePanel = createImagePanel();
-        targetPanel = createImagePanel();
-
-        panel.add(templatePanel, BorderLayout.WEST);
-        panel.add(targetPanel, BorderLayout.EAST);
-
-        return panel;
+    public static ProcessSinglePanel getInstance() {
+        if (instance == null) {
+            instance = new ProcessSinglePanel();
+        }
+        return instance;
     }
 
     // Метод для создания панели изображения
-    private JPanel createImagePanel() {
+    private JPanel createImagePanel(JLabel label) {
+        // Создание и настройка панели изображения
         JPanel imagePanel = new JPanel(new BorderLayout());
         imagePanel.setBackground(new Color(0x181818));
         imagePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
 
-        JLabel imageLabel = new JLabel();
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
-
-        JScrollPane scrollPane = new JScrollPane(imageLabel);
+        // Создание скролл-панели
+        JScrollPane scrollPane = new JScrollPane(label);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getViewport().setBackground(new Color(0x181818));
         imagePanel.add(scrollPane, BorderLayout.CENTER);
 
+        // Добавление кнопок на панель
         JPanel buttonPanel = createButtonPanel();
         imagePanel.add(buttonPanel, BorderLayout.SOUTH);
-
-        if (templateLabel == null) {
-            templateLabel = imageLabel;
-        } else {
-            targetLabel = imageLabel;
-        }
 
         return imagePanel;
     }
 
+    // Метод для создания лейбла изображения
+    private JLabel createImageLabel() {
+        JLabel imageLabel = new JLabel();
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
+        return imageLabel;
+    }
+
     // Метод для создания панели кнопок
     private JPanel createButtonPanel() {
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 5, 5));
-        buttonPanel.setOpaque(false);
-
+        JPanel buttonPanel;
         if (templatePanel == null) {
+            buttonPanel = new JPanel(new GridLayout(1, 1, 5, 5));
+            buttonPanel.setOpaque(false);
+
             loadTemplateButton = createButton("Загрузить шаблон", e -> loadTemplateImage());
             buttonPanel.add(loadTemplateButton);
         } else {
+            buttonPanel = new JPanel(new GridLayout(1, 3, 5, 5));
+            buttonPanel.setOpaque(false);
+
             loadTargetButton = createButton("Загрузить изображение", e -> loadTargetImage());
             processTargetButton = createButton("Обработать", e -> processTargetImage());
             saveTargetButton = createButton("Сохранить", e -> saveTargetImage());
@@ -114,7 +122,7 @@ public class ProcessSinglePanel extends JPanel {
         saveTargetButton.setEnabled(false);
 
         JFileChooser fileChooser = createImageFileChooser();
-        if (fileChooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
             try {
                 templateImage = ImageIO.loadImage(imagePath);
@@ -129,7 +137,7 @@ public class ProcessSinglePanel extends JPanel {
     // Загрузка целевого изображения
     private void loadTargetImage() {
         JFileChooser fileChooser = createImageFileChooser();
-        if (fileChooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
             try {
                 targetImage = ImageIO.loadImage(imagePath);
@@ -197,7 +205,6 @@ public class ProcessSinglePanel extends JPanel {
         // Вывод изображения на панель
         displayImage(boundedImg, targetLabel);
         targetImage = boundedImg;
-        panel.repaint();
 
         // Включение кнопок
         loadTemplateButton.setEnabled(true);
@@ -209,7 +216,7 @@ public class ProcessSinglePanel extends JPanel {
     private void saveTargetImage() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Сохраните изображение");
-        if (fileChooser.showSaveDialog(panel) == JFileChooser.APPROVE_OPTION) {
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             String savePath = fileChooser.getSelectedFile().getAbsolutePath() + ".png";
             try {
                 ImageIO.saveImage(savePath, targetImage);
@@ -232,7 +239,7 @@ public class ProcessSinglePanel extends JPanel {
 
     // Метод для отображения сообщения об ошибке
     private void showErrorDialog(String message) {
-        JOptionPane.showMessageDialog(panel, message, "Ошибка", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, "Ошибка", JOptionPane.ERROR_MESSAGE);
     }
 
     // Метод для отображения изображения на фрейм
@@ -260,8 +267,6 @@ public class ProcessSinglePanel extends JPanel {
         // Установка изображения на JLabel
         ImageIcon imageIcon = new ImageIcon(scaledImage);
         label.setIcon(imageIcon);
-
-        panel.repaint();
     }
 
     // Метод для преобразования Mat из OpenCV в BufferedImage из AWT
