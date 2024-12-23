@@ -5,16 +5,18 @@ import java.awt.*;
 
 public class BorderProgressBar extends JPanel {
 
-    private final JComponent targetComponent;
     private int progressPosition = 0;
     private final int STEP_SIZE = 10;
+    private final Rectangle targetBounds;
 
-    public BorderProgressBar(JComponent targetComponent) {
-        this.targetComponent = targetComponent;
+    public BorderProgressBar(Rectangle targetBounds) {
+        this.targetBounds = targetBounds;
         setOpaque(false);
     }
 
-    // Метод для запуска анимации прогресс-бара
+    /**
+     * Метод для запуска анимации прогресс-бара
+     */
     public void startAnimation() {
         Timer timer = new Timer(20, e -> {
             progressPosition += STEP_SIZE;
@@ -27,16 +29,29 @@ public class BorderProgressBar extends JPanel {
         timer.start();
     }
 
-    // Метод для вычисления периметра компонента
+    /**
+     * Метод для вычисления периметра компонента
+     *
+     * @return периметр компонента
+     */
     private int getPerimeter() {
-        Rectangle bounds = targetComponent.getBounds();
-        int width = bounds.width + 10;
-        int height = bounds.height + 10;
+        int width = targetBounds.width + 10;
+        int height = targetBounds.height + 10;
         return 2 * (width + height);
     }
 
-    // Метод для отрисовки прогресс-бара
-    private void drawProgressBar(Graphics2D g2, int x, int y, int width, int height) {
+    /**
+     * Метод для отрисовки прогресс-бара
+     *
+     * @param g2     графический контекст компонента
+     * @param x      граница целевого компонента по оси X
+     * @param y      граница целевого компонента по оси Y
+     * @param width  ширина целевого компонента
+     * @param height высота целевого компонента
+     */
+    private void drawProgressBar(Graphics2D g2,
+                                 int x, int y,
+                                 int width, int height) {
         int pos = progressPosition;
         if (pos < width) {
             // Верхняя сторона
@@ -62,11 +77,10 @@ public class BorderProgressBar extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         // Получение границ целевого компонента
-        Rectangle bounds = targetComponent.getBounds();
-        int x = bounds.x - 10;
-        int y = bounds.y - 10;
-        int width = bounds.width + 10;
-        int height = bounds.height + 10;
+        int x = targetBounds.x - 10;
+        int y = targetBounds.y - 10;
+        int width = targetBounds.width + 10;
+        int height = targetBounds.height + 10;
 
         // Отрисовка прогресс-бара
         g2.setColor(new Color(0x60CF92));

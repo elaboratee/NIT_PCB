@@ -1,9 +1,10 @@
 package gui;
 
 import exception.ImageReadException;
-import image.Filters;
-import image.ImageIO;
-import image.Processing;
+import util.DataConversions;
+import util.Filters;
+import util.ImageIO;
+import util.Processing;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
@@ -18,27 +19,29 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Класс, определяющий панель для обработки множества изображений
+ */
 public class ProcessManyPanel extends JPanel {
 
     private static ProcessManyPanel instance;
 
-    private final JPanel paramPanel, imagePanel;
     private JButton selectImageDirButton, selectTemplateDirButton, selectLogsButton, processImagesButton;
     private JTextField imagePathField, templatePathField, logsPathField;
-    private JLabel imageLabel;
+    private final JLabel imageLabel;
     private final JProgressBar progressBar;
     private final JFileChooser fileChooser;
     private final Toolkit tk = Toolkit.getDefaultToolkit();
 
     private ProcessManyPanel() {
-        // Создание верхней панели
-        paramPanel = createParamPanel();
+        // Создание панели параметров
+        JPanel paramPanel = createParamPanel();
 
         // Создание лейбла изображения
         imageLabel = createImageLabel();
 
         // Создание панели изображения
-        imagePanel = createImagePanel(imageLabel);
+        JPanel imagePanel = createImagePanel(imageLabel);
 
         // Создание панели прогресс-бара
         progressBar = createProgressBar();
@@ -53,6 +56,11 @@ public class ProcessManyPanel extends JPanel {
         add(progressBar, BorderLayout.SOUTH);
     }
 
+    /**
+     * Метод для получения экземпляра панели-синглтона
+     *
+     * @return экземпляр панели обработки множества изображений
+     */
     public static ProcessManyPanel getInstance() {
         if (instance == null) {
             instance = new ProcessManyPanel();
@@ -60,7 +68,11 @@ public class ProcessManyPanel extends JPanel {
         return instance;
     }
 
-    // Метод для создания панели параметров
+    /**
+     * Метод для создания панели параметров
+     *
+     * @return панель параметров с кнопками и текстовыми полями
+     */
     private JPanel createParamPanel() {
         // Создание и настройка верхней панели (с кнопками)
         JPanel panel = new JPanel(new GridLayout(4, 2, 5, 5));
@@ -113,7 +125,11 @@ public class ProcessManyPanel extends JPanel {
         return panel;
     }
 
-    // Метод для создания лейбла изображения
+    /**
+     * Метод для создания лейбла изображения
+     *
+     * @return универсальный лейбл изображения
+     */
     private JLabel createImageLabel() {
         JLabel label = new JLabel();
         label.setVerticalAlignment(SwingConstants.CENTER);
@@ -121,7 +137,12 @@ public class ProcessManyPanel extends JPanel {
         return label;
     }
 
-    // Метод для создания панели изображения
+    /**
+     * Метод для создания панели изображения
+     *
+     * @param label лейбл изображения, который необходимо привязать к панели
+     * @return панель изображения с привязанным лейблом {@code label}
+     */
     private JPanel createImagePanel(JLabel label) {
         // Создание и настройка панели изображения
         JPanel panel = new JPanel(new BorderLayout());
@@ -139,7 +160,13 @@ public class ProcessManyPanel extends JPanel {
         return panel;
     }
 
-    // Метод для создания кнопки с заданными текстом и действием
+    /**
+     * Метод для создания кнопки с заданными текстом и действием
+     *
+     * @param text   текст кнопки
+     * @param action обработчик события кнопки (по сути выполняемое при нажатии действие)
+     * @return кнопка с заданными текстом и действием
+     */
     private JButton createButton(String text, ActionListener action) {
         JButton button = new JButton(text);
         button.addActionListener(action);
@@ -147,18 +174,10 @@ public class ProcessManyPanel extends JPanel {
         return button;
     }
 
-    // Метод для создания текстового поля
-    private JTextField createTextField() {
-        JTextField textField = new JTextField();
-        textField.setEditable(false);
-        return textField;
-    }
-
-    // Метод для создания прогресс-бара
-    private JProgressBar createProgressBar() {
-        return new JProgressBar();
-    }
-
+    /**
+     * Обработчик событий кнопки выбора директории с изображениями.
+     * При вызове выполняется выбор директории и отображение ее пути в текстовом поле
+     */
     private void selectImageDirectory() {
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File selectedDirectory = fileChooser.getSelectedFile();
@@ -167,6 +186,10 @@ public class ProcessManyPanel extends JPanel {
         }
     }
 
+    /**
+     * Обработчик событий кнопки выбора директории с шаблонами.
+     * При вызове выполняется выбор директории и отображение ее пути в текстовом поле
+     */
     private void selectTemplateDirectory() {
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File selectedDirectory = fileChooser.getSelectedFile();
@@ -175,6 +198,10 @@ public class ProcessManyPanel extends JPanel {
         }
     }
 
+    /**
+     * Обработчик событий кнопки выбора директории для сохранения файла логов.
+     * При вызове выполняется выбор директории и отображение ее пути в текстовом поле
+     */
     private void selectLogsDirectory() {
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File selectedDirectory = fileChooser.getSelectedFile();
@@ -183,6 +210,13 @@ public class ProcessManyPanel extends JPanel {
         }
     }
 
+    /**
+     * Обработчик событий кнопки обработки директории изображений.
+     * При вызове выполняется парсинг изображений и шаблонов, а также создание
+     * отдельного потока обработки изображений, в течение которой обработанные
+     * изображения отображаются в интерфейсе. Также найденные дефекты и их координаты
+     * логируются в файле, создаваемому по указанному пути
+     */
     private void processImages() {
         // Получение изображений для обработки
         File imageDirectory = new File(imagePathField.getText());
@@ -235,7 +269,8 @@ public class ProcessManyPanel extends JPanel {
                                             .filter(file -> file.getName().startsWith(templateCode))
                                             .findFirst()
                                             .orElseThrow(() ->
-                                                    new ImageReadException("Шаблон не найден для кода: " + templateCode))
+                                                    new ImageReadException("Шаблон не найден для кода: " +
+                                                            templateCode))
                                             .toString()
                             );
                         } catch (ImageReadException ire) {
@@ -287,7 +322,7 @@ public class ProcessManyPanel extends JPanel {
                     Mat targetCLAHE = Filters.applyCLAHE(targetBlur);
 
                     // Поиск дефектов методом сравнения с шаблоном
-                    Mat matchedImg = Processing.matchTemplateOptimized(templateCLAHE, targetCLAHE);
+                    Mat matchedImg = Processing.matchTemplate(templateCLAHE, targetCLAHE);
 
                     // Постобработка изображения
                     Mat dilatedImg = Processing.dilateImage(matchedImg);
@@ -334,7 +369,31 @@ public class ProcessManyPanel extends JPanel {
         }).start();
     }
 
-    // Метод для создания настроенного JFileChooser
+    /**
+     * Метод для создания текстового поля
+     *
+     * @return универсальное нередактируемое текстовое поле
+     */
+    private JTextField createTextField() {
+        JTextField textField = new JTextField();
+        textField.setEditable(false);
+        return textField;
+    }
+
+    /**
+     * Метод для создания прогресс-бара
+     *
+     * @return экземпляр прогресс-бара
+     */
+    private JProgressBar createProgressBar() {
+        return new JProgressBar();
+    }
+
+    /**
+     * Метод для создания настроенного JFileChooser
+     *
+     * @return сконфигурированный экземпляр JFileChooser для выбора директорий
+     */
     private JFileChooser createFileChooser() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Выберите директорию");
@@ -342,15 +401,24 @@ public class ProcessManyPanel extends JPanel {
         return fileChooser;
     }
 
-    // Метод для отображения сообщения об ошибке
+    /**
+     * Метод для отображения сообщения об ошибке в диалоговом окне
+     *
+     * @param message сообщение, которое необходимо отобразить в диалоговом окне
+     */
     private void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(this, message, "Ошибка", JOptionPane.ERROR_MESSAGE);
     }
 
-    // Метод для отображения изображения на фрейм
+    /**
+     * Метод для отображения изображения в интерфейсе
+     *
+     * @param image изображение, которое необходимо отобразить в {@code label}
+     * @param label лейбл, в котором должно отобразиться изображение {@code image}
+     */
     private void displayImage(Mat image, JLabel label) {
         // Получение оригинальных размеров изображения
-        BufferedImage bufferedImage = matToBufferedImage(image);
+        BufferedImage bufferedImage = DataConversions.matToBufferedImage(image);
         int originalWidth = bufferedImage.getWidth();
         int originalHeight = bufferedImage.getHeight();
 
@@ -372,27 +440,5 @@ public class ProcessManyPanel extends JPanel {
         // Установка изображения на JLabel
         ImageIcon imageIcon = new ImageIcon(scaledImage);
         label.setIcon(imageIcon);
-    }
-
-    // Метод для преобразования Mat из OpenCV в BufferedImage из AWT
-    private BufferedImage matToBufferedImage(Mat mat) {
-        int type;
-        if (mat.channels() == 1) {
-            type = BufferedImage.TYPE_BYTE_GRAY;
-        } else if (mat.channels() == 3) {
-            type = BufferedImage.TYPE_3BYTE_BGR;
-        } else {
-            throw new IllegalArgumentException("Не поддерживаемое количество каналов матрицы: " + mat.channels());
-        }
-
-        int width = mat.width();
-        int height = mat.height();
-        int channels = mat.channels();
-        byte[] data = new byte[width * height * channels];
-
-        mat.get(0, 0, data);
-        BufferedImage bufferedImage = new BufferedImage(width, height, type);
-        bufferedImage.getRaster().setDataElements(0, 0, width, height, data);
-        return bufferedImage;
     }
 }

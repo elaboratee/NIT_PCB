@@ -1,4 +1,4 @@
-package image;
+package util;
 
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -6,14 +6,24 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Утилитный класс, предоставляющий статические методы для обработки изображений
+ */
 public class Processing {
 
     private static final int KERNEL_SIZE = 5;
 
-    public static Mat matchTemplateOptimized(Mat target,
-                                             Mat template) {
+    /**
+     * Метод для поиска дефектов при помощи алгоритма сравнения с шаблоном
+     *
+     * @param template шаблонное изображение
+     * @param target   целевое изображение
+     * @return изображение в оттенках серого с выделенными дефектами
+     */
+    public static Mat matchTemplate(Mat template,
+                                    Mat target) {
         // Результирующая матрица
-        Mat result = new Mat(target.size(), CvType.CV_32F);
+        Mat result = new Mat(template.size(), CvType.CV_32F);
 
         // Структуры для хранения шаблонов и промежуточных результатов
         Rect roi = new Rect(0, 0, KERNEL_SIZE, KERNEL_SIZE);
@@ -23,15 +33,15 @@ public class Processing {
 
         // Сравнение по парам ROI
         int step = KERNEL_SIZE / 2;
-        for (int y = 0; y < target.rows() - KERNEL_SIZE + 1; y += step) {
-            for (int x = 0; x < target.cols() - KERNEL_SIZE + 1; x += step) {
+        for (int y = 0; y < template.rows() - KERNEL_SIZE + 1; y += step) {
+            for (int x = 0; x < template.cols() - KERNEL_SIZE + 1; x += step) {
                 // Изменяем координаты ROI
                 roi.x = x;
                 roi.y = y;
 
                 // Определяем области шаблонов
-                targetRegion = target.submat(roi);
-                templateRegion = template.submat(roi);
+                targetRegion = template.submat(roi);
+                templateRegion = target.submat(roi);
 
                 // Сравниваем шаблоны
                 Imgproc.matchTemplate(targetRegion, templateRegion, matchResult, Imgproc.TM_SQDIFF_NORMED);
@@ -50,6 +60,12 @@ public class Processing {
         return result;
     }
 
+    /**
+     * Метод для поиска контуров на изображении
+     *
+     * @param img исходное изображение
+     * @return список найденных контуров
+     */
     public static List<MatOfPoint> findContours(Mat img) {
         // Пороговая обработка для получения бинарного изображения
         Mat thresholdImg = new Mat();
@@ -69,6 +85,12 @@ public class Processing {
         return contours;
     }
 
+    /**
+     * Метод для получения минимальных ограничивающих прямоугольников контуров
+     *
+     * @param contours список контуров
+     * @return список минимальных ограничивающих прямоугольников
+     */
     public static List<Rect> getBoundingRects(List<MatOfPoint> contours) {
         List<Rect> rects = new ArrayList<>();
         for (MatOfPoint contour : contours) {
@@ -77,6 +99,12 @@ public class Processing {
         return rects;
     }
 
+    /**
+     * Метод для выполнения морфологической операции дилатации
+     *
+     * @param src исходное изображение
+     * @return изображение, после выполнения операции дилатации
+     */
     public static Mat dilateImage(Mat src) {
         // Создание примитива
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(KERNEL_SIZE, KERNEL_SIZE));
@@ -85,19 +113,6 @@ public class Processing {
         Mat result = new Mat();
         Imgproc.dilate(src, result, kernel);
 
-        return result;
-    }
-
-    public static Mat highlightBoundaries(Mat img) {
-        Mat result = new Mat();
-        Imgproc.Canny(
-                img,
-                result,
-                80,
-                200,
-                3,
-                true
-        );
         return result;
     }
 }

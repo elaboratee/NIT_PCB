@@ -1,5 +1,8 @@
 package exception;
 
+/**
+ * Исключение, выбрасываемое при ошибках сохранения изображений
+ */
 public class ImageWriteException extends Exception {
 
     public ImageWriteException() {

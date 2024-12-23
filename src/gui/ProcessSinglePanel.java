@@ -2,9 +2,10 @@ package gui;
 
 import exception.ImageReadException;
 import exception.ImageWriteException;
-import image.Filters;
-import image.ImageIO;
-import image.Processing;
+import util.DataConversions;
+import util.Filters;
+import util.ImageIO;
+import util.Processing;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
@@ -16,6 +17,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
 
+/**
+ * Класс, определяющий панель для обработки одного изображения
+ */
 public class ProcessSinglePanel extends JPanel {
 
     private static ProcessSinglePanel instance;
@@ -24,7 +28,6 @@ public class ProcessSinglePanel extends JPanel {
     private final JLabel templateLabel, targetLabel;
     private JButton loadTemplateButton, loadTargetButton, processTargetButton, saveTargetButton;
     private Mat templateImage, targetImage;
-    private final Toolkit tk = Toolkit.getDefaultToolkit();
 
     private ProcessSinglePanel() {
         // Лейблы для шаблонного и целевого изображений
@@ -41,6 +44,11 @@ public class ProcessSinglePanel extends JPanel {
         add(targetPanel);
     }
 
+    /**
+     * Метод для получения экземпляра панели-синглтона
+     *
+     * @return экземпляр панели обработки одного изображения
+     */
     public static ProcessSinglePanel getInstance() {
         if (instance == null) {
             instance = new ProcessSinglePanel();
@@ -48,7 +56,12 @@ public class ProcessSinglePanel extends JPanel {
         return instance;
     }
 
-    // Метод для создания панели изображения
+    /**
+     * Метод для создания панели изображения
+     *
+     * @param label лейбл изображения, который необходимо привязать к панели
+     * @return панель изображения с привязанным лейблом {@code label} и панелью кнопок
+     */
     private JPanel createImagePanel(JLabel label) {
         // Создание и настройка панели изображения
         JPanel imagePanel = new JPanel(new BorderLayout());
@@ -70,7 +83,11 @@ public class ProcessSinglePanel extends JPanel {
         return imagePanel;
     }
 
-    // Метод для создания лейбла изображения
+    /**
+     * Метод для создания лейбла изображения
+     *
+     * @return универсальный лейбл изображения
+     */
     private JLabel createImageLabel() {
         JLabel imageLabel = new JLabel();
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -78,7 +95,11 @@ public class ProcessSinglePanel extends JPanel {
         return imageLabel;
     }
 
-    // Метод для создания панели кнопок
+    /**
+     * Универсальный метод для создания панели кнопок
+     *
+     * @return панель кнопок
+     */
     private JPanel createButtonPanel() {
         JPanel buttonPanel;
         if (templatePanel == null) {
@@ -107,7 +128,13 @@ public class ProcessSinglePanel extends JPanel {
         return buttonPanel;
     }
 
-    // Метод для создания кнопки с заданными текстом и действием
+    /**
+     * Метод для создания кнопки с заданными текстом и действием
+     *
+     * @param text   текст кнопки
+     * @param action обработчик события кнопки (по сути выполняемое при нажатии действие)
+     * @return кнопка с заданными текстом и действием
+     */
     private JButton createButton(String text, ActionListener action) {
         JButton button = new JButton(text);
         button.addActionListener(action);
@@ -115,13 +142,19 @@ public class ProcessSinglePanel extends JPanel {
         return button;
     }
 
-    // Загрузка шаблонного изображения
+    /**
+     * Обработчик событий для кнопки загрузки шаблонного изображения.
+     * При вызове выполняется загрузка выбранного изображения из файловой системы
+     * и его отображение в интерфейсе
+     */
     private void loadTemplateImage() {
+        // Выключение кнопок
         loadTargetButton.setEnabled(false);
         processTargetButton.setEnabled(false);
         saveTargetButton.setEnabled(false);
 
-        JFileChooser fileChooser = createImageFileChooser();
+        // Загрузка и отображение шаблонного изображения
+        JFileChooser fileChooser = createFileChooser();
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
             try {
@@ -134,9 +167,14 @@ public class ProcessSinglePanel extends JPanel {
         }
     }
 
-    // Загрузка целевого изображения
+    /**
+     * Обработчик событий для кнопки загрузки целевого изображения.
+     * При вызове выполняется загрузка выбранного изображения из файловой системы
+     * и его отображение в интерфейсе
+     */
     private void loadTargetImage() {
-        JFileChooser fileChooser = createImageFileChooser();
+        // Загрузка и отображение целевого изображения
+        JFileChooser fileChooser = createFileChooser();
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
             try {
@@ -150,7 +188,11 @@ public class ProcessSinglePanel extends JPanel {
         }
     }
 
-    // Обработка целевого изображения
+    /**
+     * Обработчик событий для кнопки обработки целевого изображения.
+     * При вызове выполняется создание отдельного потока обработки изображения, после
+     * завершения которой результат отображается в интерфейсе
+     */
     private void processTargetImage() {
         // Отключение кнопок
         processTargetButton.setEnabled(false);
@@ -158,6 +200,7 @@ public class ProcessSinglePanel extends JPanel {
         loadTargetButton.setEnabled(false);
         saveTargetButton.setEnabled(false);
 
+        // Создание потока обработки изображения
         new Thread(() -> {
             // Клонирование исходных изображений
             Mat templateCopy = templateImage.clone();
@@ -185,7 +228,7 @@ public class ProcessSinglePanel extends JPanel {
             Mat targetCLAHE = Filters.applyCLAHE(targetBlur);
 
             // Поиск дефектов методом сравнения с шаблоном
-            Mat matchedImg = Processing.matchTemplateOptimized(templateCLAHE, targetCLAHE);
+            Mat matchedImg = Processing.matchTemplate(templateCLAHE, targetCLAHE);
 
             // Постобработка изображения
             Mat dilatedImg = Processing.dilateImage(matchedImg);
@@ -212,11 +255,15 @@ public class ProcessSinglePanel extends JPanel {
             loadTargetButton.setEnabled(true);
             saveTargetButton.setEnabled(true);
         }).start();
-
     }
 
-    // Сохранение целевого изображения
+    /**
+     * Обработчик событий для кнопки сохранения обработанного изображения.
+     * При вызове выполняется сохранение обработанного изображения в файловой системе
+     * по выбранному пути
+     */
     private void saveTargetImage() {
+        // Сохранение обработанного изображения
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Сохраните изображение");
         if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -229,8 +276,12 @@ public class ProcessSinglePanel extends JPanel {
         }
     }
 
-    // Метод для создания настроенного JFileChooser
-    private JFileChooser createImageFileChooser() {
+    /**
+     * Метод для создания настроенного JFileChooser
+     *
+     * @return сконфигурированный экземпляр JFileChooser для выбора изображений
+     */
+    private JFileChooser createFileChooser() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Выберите изображение");
         fileChooser.setCurrentDirectory(new File("D:\\DATASETS\\PCB_DATASET"));
@@ -240,19 +291,29 @@ public class ProcessSinglePanel extends JPanel {
         return fileChooser;
     }
 
-    // Метод для отображения сообщения об ошибке
+    /**
+     * Метод для отображения сообщения об ошибке в диалоговом окне
+     *
+     * @param message сообщение, которое необходимо отобразить в диалоговом окне
+     */
     private void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(this, message, "Ошибка", JOptionPane.ERROR_MESSAGE);
     }
 
-    // Метод для отображения изображения на фрейм
+    /**
+     * Метод для отображения изображения в интерфейсе
+     *
+     * @param image изображение, которое необходимо отобразить в {@code label}
+     * @param label лейбл, в котором должно отобразиться изображение {@code image}
+     */
     private void displayImage(Mat image, JLabel label) {
         // Получение оригинальных размеров изображения
-        BufferedImage bufferedImage = matToBufferedImage(image);
+        BufferedImage bufferedImage = DataConversions.matToBufferedImage(image);
         int originalWidth = bufferedImage.getWidth();
         int originalHeight = bufferedImage.getHeight();
 
         // Получение доступного размера панели
+        Toolkit tk = Toolkit.getDefaultToolkit();
         int maxWidth = (int) (tk.getScreenSize().width / 2.5);
         int maxHeight = (int) (tk.getScreenSize().height / 2.0);
 
@@ -270,27 +331,5 @@ public class ProcessSinglePanel extends JPanel {
         // Установка изображения на JLabel
         ImageIcon imageIcon = new ImageIcon(scaledImage);
         label.setIcon(imageIcon);
-    }
-
-    // Метод для преобразования Mat из OpenCV в BufferedImage из AWT
-    private BufferedImage matToBufferedImage(Mat mat) {
-        int type;
-        if (mat.channels() == 1) {
-            type = BufferedImage.TYPE_BYTE_GRAY;
-        } else if (mat.channels() == 3) {
-            type = BufferedImage.TYPE_3BYTE_BGR;
-        } else {
-            throw new IllegalArgumentException("Не поддерживаемое количество каналов матрицы: " + mat.channels());
-        }
-
-        int width = mat.width();
-        int height = mat.height();
-        int channels = mat.channels();
-        byte[] data = new byte[width * height * channels];
-
-        mat.get(0, 0, data);
-        BufferedImage bufferedImage = new BufferedImage(width, height, type);
-        bufferedImage.getRaster().setDataElements(0, 0, width, height, data);
-        return bufferedImage;
     }
 }

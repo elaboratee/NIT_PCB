@@ -4,31 +4,50 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-public class SplashScreen {
+/**
+ * Класс, определяющий сплэш-скрин
+ */
+public class SplashScreen extends JFrame {
 
-    private static JFrame splashFrame;
+    private static SplashScreen instance;
 
-    // Метод для отображения сплэш-скрина
-    public static void showSplashScreen() {
-        // Создание фрейма сплэш-экрана
-        splashFrame = new JFrame("SurfaceScout");
+    private SplashScreen() {
+        super("SurfaceScout");
+        configureSplashScreen();
+    }
 
+    /**
+     * Метод для получения экземпляра синглтона сплэш-скрина
+     *
+     * @return экземпляр сплэш-скрина
+     */
+    public static synchronized SplashScreen getInstance() {
+        if (instance == null) {
+            instance = new SplashScreen();
+        }
+        return instance;
+    }
+
+    /**
+     * Метод для конфигурации сплэш-скрина
+     */
+    private void configureSplashScreen() {
         // Конфигурация фрейма сплэш-экрана
-        splashFrame.setUndecorated(true);
-        splashFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        splashFrame.setResizable(false);
-        splashFrame.setAlwaysOnTop(true);
-        splashFrame.setSize(700, 400);
-        splashFrame.setLocationRelativeTo(null);
+        setUndecorated(true);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setResizable(false);
+        setAlwaysOnTop(true);
+        setSize(700, 400);
+        setLocationRelativeTo(null);
 
         // Создание JLayeredPane для управления слоями
         JLayeredPane layeredPane = new JLayeredPane();
         layeredPane.setLayout(null);
-        splashFrame.add(layeredPane);
+        add(layeredPane);
 
         // Добавление иконки
         ImageIcon icon = new ImageIcon("img" + File.separator + "icon.png");
-        splashFrame.setIconImage(icon.getImage());
+        setIconImage(icon.getImage());
 
         // Добавление изображения
         ImageIcon imageIcon = new ImageIcon("img" + File.separator + "splash_screen.png");
@@ -38,20 +57,27 @@ public class SplashScreen {
         layeredPane.add(imageLabel, JLayeredPane.DEFAULT_LAYER);
 
         // Добавление рамки с анимацией
-        BorderProgressBar borderProgressBar = new BorderProgressBar(imageLabel);
-        borderProgressBar.setBounds(0, 0, splashFrame.getWidth(), splashFrame.getHeight());
+        Rectangle targetBounds = imageLabel.getBounds();
+        BorderProgressBar borderProgressBar = new BorderProgressBar(targetBounds);
+        borderProgressBar.setBounds(0, 0, getWidth(), getHeight());
         layeredPane.add(borderProgressBar, JLayeredPane.PALETTE_LAYER);
-
-        splashFrame.setVisible(true);
 
         // Запуск анимации прогресс-бара
         borderProgressBar.startAnimation();
     }
 
-    // Метод для закрытия сплэш-скрина
-    public static void closeSplashScreen() {
-        if (splashFrame != null) {
-            splashFrame.dispose();
-        }
+    /**
+     * Метод для отображения сплэш-скрина
+     */
+    public void showSplashScreen() {
+        setVisible(true);
+    }
+
+    /**
+     * Метод для закрытия сплэш-скрина
+     */
+    public void closeSplashScreen() {
+        dispose();
+        instance = null;
     }
 }

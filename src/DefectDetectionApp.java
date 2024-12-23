@@ -28,15 +28,21 @@ public class DefectDetectionApp {
         }
 
         // Отображение основного окна
-        SwingUtilities.invokeLater(MainScreen::showMainScreen);
+        SwingUtilities.invokeLater(() -> MainScreen.getInstance().showMainScreen());
     }
 
-    // Метод для отображения сплэш-скрина с задержкой
+    /**
+     * Метод для отображения сплэш-скрина с задержкой
+     */
     private static void showSplashScreen() {
-        SplashScreen.showSplashScreen();
+        // Получение экземпляра и отображение сплэш-скрина
+        SplashScreen splashScreen = SplashScreen.getInstance();
+        splashScreen.showSplashScreen();
+
+        // Настройка и запуск таймера
         Random rand = new Random(System.currentTimeMillis());
-        Timer timer = new Timer(rand.nextInt(3000, 7000), e -> {
-            SplashScreen.closeSplashScreen();
+        Timer timer = new Timer(rand.nextInt(2000, 6000), e -> {
+            splashScreen.closeSplashScreen();
             latch.countDown();
         });
         timer.setRepeats(false);
