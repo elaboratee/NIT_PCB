@@ -2,9 +2,7 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.net.URL;
-import java.security.cert.X509Certificate;
 
 /**
  * Класс, определяющий сплэш-скрин

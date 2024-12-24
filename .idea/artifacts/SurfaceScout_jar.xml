@@ -1,11 +1,11 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="NIT_PCB:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/NIT_PCB_jar</output-path>
-    <root id="archive" name="NIT_PCB.jar">
+  <artifact type="jar" name="SurfaceScout:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/SurfaceScout_jar</output-path>
+    <root id="archive" name="SurfaceScout.jar">
       <element id="directory" name="META-INF">
         <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
       </element>
-      <element id="module-output" name="NIT_PCB" />
+      <element id="module-output" name="SurfaceScout" />
       <element id="extracted-dir" path="$PROJECT_DIR$/../../Компьютерная_графика/ЛАБЫ/CompGrapgh_LABS/lib/flatlaf-intellij-themes-3.5.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/../../Компьютерная_графика/ЛАБЫ/CompGrapgh_LABS/lib/flatlaf-3.5.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="C:/OpenCV/opencv_4_9/build/java/opencv-490.jar" path-in-jar="/" />

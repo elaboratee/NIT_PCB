@@ -1,12 +1,12 @@
 package gui;
 
 import exception.ImageReadException;
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
 import util.DataConversions;
 import util.Filters;
 import util.ImageIO;
 import util.Processing;
-import org.opencv.core.*;
-import org.opencv.imgproc.Imgproc;
 
 import javax.swing.*;
 import java.awt.*;
