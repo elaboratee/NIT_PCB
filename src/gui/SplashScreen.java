@@ -3,6 +3,8 @@ package gui;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.net.URL;
+import java.security.cert.X509Certificate;
 
 /**
  * Класс, определяющий сплэш-скрин
@@ -10,6 +12,9 @@ import java.io.File;
 public class SplashScreen extends JFrame {
 
     private static SplashScreen instance;
+
+    private final URL iconURL = getClass().getClassLoader().getResource("icon.png");
+    private final URL screenURL = getClass().getClassLoader().getResource("splash_screen.png");
 
     private SplashScreen() {
         super("SurfaceScout");
@@ -46,11 +51,13 @@ public class SplashScreen extends JFrame {
         add(layeredPane);
 
         // Добавление иконки
-        ImageIcon icon = new ImageIcon("img" + File.separator + "icon.png");
+        ImageIcon icon = new ImageIcon(iconURL);
         setIconImage(icon.getImage());
 
         // Добавление изображения
-        ImageIcon imageIcon = new ImageIcon("img" + File.separator + "splash_screen.png");
+        ImageIcon imageIcon = new ImageIcon(screenURL);
+
+
         imageIcon.setImage(imageIcon.getImage().getScaledInstance(680, 380, Image.SCALE_SMOOTH));
         JLabel imageLabel = new JLabel(imageIcon);
         imageLabel.setBounds(10, 10, imageIcon.getIconWidth(), imageIcon.getIconHeight());

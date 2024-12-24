@@ -3,6 +3,7 @@ package gui;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.net.URL;
 
 /**
  * Класс, определяющий главное окно приложения
@@ -12,6 +13,7 @@ public class MainScreen extends JFrame {
     private static MainScreen instance;
 
     private static final Toolkit tk = Toolkit.getDefaultToolkit();
+    private final URL iconURL = getClass().getClassLoader().getResource("icon.png");
 
     private MainScreen() {
         super("SurfaceScout");
@@ -43,7 +45,7 @@ public class MainScreen extends JFrame {
         setLocationRelativeTo(null);
 
         // Установка иконки
-        ImageIcon icon = new ImageIcon("img" + File.separator + "icon.png");
+        ImageIcon icon = new ImageIcon(iconURL);
         setIconImage(icon.getImage());
 
         // Создание и добавление панели вкладок
